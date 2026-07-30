@@ -1,0 +1,15 @@
+<Project Sdk="MSBuild.Sdk.SqlProj/3.2.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <SqlServerVersion>Sql150</SqlServerVersion>
+    <RootNamespace>AOtransact.Database</RootNamespace>
+    <AssemblyName>AOtransact.Database</AssemblyName>
+    <OutputType>Library</OutputType>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Schema\dbo\Tables\Customers.sql" />
+  </ItemGroup>
+</Project>
+

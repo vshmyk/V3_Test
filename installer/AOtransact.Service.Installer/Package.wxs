@@ -1,0 +1,133 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="AOTransact Service"
+           Manufacturer="Agency Online"
+           Version="1.0.0"
+           UpgradeCode="99F5D42D-67F5-4C78-AC55-AE9A27C86B5C"
+           Compressed="yes"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of AOTransact Service is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Launch Message="AOTransact Service requires 64-bit Windows." Condition="VersionNT64" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="AOTransact">
+        <Directory Id="OFFLINELOGDIR" Name="offline-log">
+          <Directory Id="FASTCONVERTDIR" Name="fast-quote-convert">
+            <Directory Id="FASTCONVERTBINDIR" Name="bin">
+              <Directory Id="FASTCONVERTRELEASEDIR" Name="Release">
+                <Directory Id="FASTCONVERTNETDIR" Name="net8.0" />
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+        <Directory Id="LOGSDIR" Name="logs" />
+        <Directory Id="RUNTIMESDIR" Name="runtimes">
+          <Directory Id="RUNTIMEWINDIR" Name="win">
+            <Directory Id="RUNTIMEWINLIBDIR" Name="lib">
+              <Directory Id="RUNTIMEWINLIBNET8DIR" Name="net8.0" />
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="AOTransact Service" Level="1">
+      <ComponentRef Id="ServiceHostComponent" />
+      <ComponentRef Id="ServiceHostSupportComponent" />
+      <ComponentRef Id="ServiceHostRuntimeComponent" />
+      <ComponentRef Id="ServiceHostSettingsComponent" />
+      <ComponentRef Id="LogsFolderComponent" />
+      <ComponentRef Id="OfflineLogScriptsComponent" />
+      <ComponentRef Id="OfflineLogConfigComponent" />
+      <ComponentRef Id="FastConverterComponent" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <Component Id="ServiceHostComponent" Directory="INSTALLFOLDER" Guid="D0F0CF70-0A59-4E0D-B50A-90F124EA7D4E" Bitness="always64">
+      <File Id="ServiceHostExe" Source="$(var.PayloadDir)\service-host\AOtransact.ServiceHost.exe" KeyPath="yes" />
+      <ServiceInstall Id="ServiceInstaller"
+                      Name="AOTransact"
+                      DisplayName="AOTransact"
+                      Description="AOTransact offline transaction recovery service"
+                      Type="ownProcess"
+                      Start="demand"
+                      ErrorControl="normal" />
+      <ServiceControl Id="ServiceControl"
+                      Name="AOTransact"
+                      Stop="both"
+                      Remove="uninstall"
+                      Wait="yes" />
+    </Component>
+
+    <Component Id="ServiceHostSupportComponent" Directory="INSTALLFOLDER" Guid="BFC69FC2-90D3-455A-89DF-50B05BEAF05F" Bitness="always64">
+      <File Source="$(var.PayloadDir)\service-host\AOtransact.ServiceHost.dll" />
+      <File Source="$(var.PayloadDir)\service-host\AOtransact.ServiceHost.deps.json" />
+      <File Source="$(var.PayloadDir)\service-host\AOtransact.ServiceHost.runtimeconfig.json" />
+      <File Source="$(var.PayloadDir)\service-host\System.Diagnostics.EventLog.dll" />
+      <File Source="$(var.PayloadDir)\service-host\System.ServiceProcess.ServiceController.dll" />
+    </Component>
+
+    <Component Id="ServiceHostRuntimeComponent" Directory="RUNTIMEWINLIBNET8DIR" Guid="BA4F24B6-7257-4BF1-A594-F05DC89C4E4D" Bitness="always64">
+      <File Source="$(var.PayloadDir)\service-host\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
+      <File Source="$(var.PayloadDir)\service-host\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+      <File Source="$(var.PayloadDir)\service-host\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll" />
+    </Component>
+
+    <Component Id="ServiceHostSettingsComponent" Directory="INSTALLFOLDER" Guid="9BDA75EE-C3BE-4A48-988D-F2EB2DA7B0A1" Bitness="always64">
+      <File Source="$(var.PayloadDir)\service-host\service-host.settings.json" KeyPath="yes" />
+    </Component>
+
+    <Component Id="LogsFolderComponent" Directory="LOGSDIR" Guid="B75EAAAB-DC55-485D-8D32-D3A0DB95B35D" Bitness="always64">
+      <CreateFolder />
+      <RegistryValue Root="HKLM" Key="Software\Agency Online\AOTransact" Name="LogsFolder" Type="string" Value="installed" KeyPath="yes" />
+    </Component>
+
+    <Component Id="OfflineLogScriptsComponent" Directory="OFFLINELOGDIR" Guid="ED2FF614-6EAA-4152-A3DA-FE2C6B463AC2" Bitness="always64">
+      <File Id="ApplyTrnScript" Source="$(var.PayloadDir)\offline-log\Apply-TrnToTarget.ps1" KeyPath="yes" />
+      <File Source="$(var.PayloadDir)\offline-log\Convert-HybridToTrn.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Export-ChscMetadataSnapshot.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Get-LiveCommittedDmlManifest.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Get-RawLdfHybridMatches.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Prepare-RawLdfIndex.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Run-AOTransactProductionCycle.ps1" />
+      <File Source="$(var.PayloadDir)\offline-log\Run-HybridLdfSingleSnapshotMultiTable.ps1" />
+    </Component>
+
+    <Component Id="OfflineLogConfigComponent" Directory="OFFLINELOGDIR" Guid="A8A01892-6624-490F-BB52-793E9096F8B4" Bitness="always64">
+      <File Id="ProdConfigFile" Source="$(var.PayloadDir)\offline-log\production.service.config.json" KeyPath="yes" />
+      <File Source="$(var.PayloadDir)\offline-log\production.service.config.sample.json" />
+      <File Source="$(var.PayloadDir)\offline-log\hybrid.config.sample.json" />
+    </Component>
+
+    <Component Id="FastConverterComponent" Directory="FASTCONVERTNETDIR" Guid="C0E0DEB3-08FB-4DAA-83EA-12B1E0401F52" Bitness="always64">
+      <File Id="FastConverterExe" Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\fast-quote-convert.exe" KeyPath="yes" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Azure.Core.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Azure.Identity.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\fast-quote-convert.deps.json" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\fast-quote-convert.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\fast-quote-convert.runtimeconfig.json" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.Bcl.AsyncInterfaces.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.Data.SqlClient.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.Data.SqlClient.SNI.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.Identity.Client.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.Abstractions.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.Logging.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.Protocols.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.IdentityModel.Tokens.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\Microsoft.SqlServer.Server.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.ClientModel.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Configuration.ConfigurationManager.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Diagnostics.EventLog.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.IdentityModel.Tokens.Jwt.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Memory.Data.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Runtime.Caching.dll" />
+      <File Source="$(var.PayloadDir)\offline-log\fast-quote-convert\bin\Release\net8.0\System.Security.Cryptography.ProtectedData.dll" />
+    </Component>
+  </Fragment>
+</Wix>

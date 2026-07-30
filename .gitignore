@@ -1,0 +1,36 @@
+# Build artifacts
+bin/
+obj/
+out/
+publish/
+
+# IDE/editor
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Logs/temp
+*.log
+*.tmp
+*.bak
+*.cache
+.tmp_*
+tmp_*/
+tmp_*.zip
+-SimpleMatch
+
+# Project-generated output
+ao-output*/
+output/
+artifacts/
+reports/
+tmp/
+_thirdparty/OrcaMDF/
+*.trn
+*.unresolved.trn
+oasis_*.html
+
+# OS files
+Thumbs.db
+.DS_Store

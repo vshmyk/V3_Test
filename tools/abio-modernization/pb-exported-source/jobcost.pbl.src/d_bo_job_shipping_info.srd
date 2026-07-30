@@ -1,0 +1,76 @@
+﻿$PBExportHeader$d_bo_job_shipping_info.srd
+release 11;
+datawindow(units=0 timer_interval=0 color=16777215 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes print.preview.outline=yes hidegrayline=no showbackcoloronxp=no grid.lines=0 )
+header(height=72 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=84 color="536870912" )
+table(column=(type=long update=yes updatewhereclause=yes key=yes name=location_id dbname="job_shipping_info.location_id" )
+ column=(type=char(6) update=yes updatewhereclause=yes key=yes name=job dbname="job_shipping_info.job" )
+ column=(type=long update=yes updatewhereclause=yes name=display_order dbname="job_shipping_info.display_order" )
+ column=(type=char(35) update=yes updatewhereclause=yes name=address_1 dbname="job_shipping_info.address_1" )
+ column=(type=char(35) update=yes updatewhereclause=yes name=address_2 dbname="job_shipping_info.address_2" )
+ column=(type=char(15) update=yes updatewhereclause=yes name=city dbname="job_shipping_info.city" )
+ column=(type=char(2) update=yes updatewhereclause=yes name=province dbname="job_shipping_info.province" )
+ column=(type=char(10) update=yes updatewhereclause=yes name=postal dbname="job_shipping_info.postal" )
+ column=(type=char(25) update=yes updatewhereclause=yes name=contact dbname="job_shipping_info.contact" )
+ column=(type=char(10) update=yes updatewhereclause=yes name=contact_phone dbname="job_shipping_info.contact_phone" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=add_user_id dbname="job_shipping_info.add_user_id" )
+ column=(type=datetime update=yes updatewhereclause=yes name=add_datetime dbname="job_shipping_info.add_datetime" )
+ column=(type=char(1) update=yes updatewhereclause=yes name=active_flag dbname="job_shipping_info.active_flag" )
+ column=(type=char(3) update=yes updatewhereclause=yes name=country dbname="job_shipping_info.country" )
+ retrieve="  SELECT location_id,   
+         job,   
+         display_order,   
+         address_1,   
+         address_2,   
+         city,   
+         province,   
+         postal,   
+         contact,   
+         contact_phone,   
+         add_user_id,   
+         add_datetime,   
+         active_flag,
+			country  
+    FROM job_shipping_info   
+" update="job_shipping_info" updatewhere=1 updatekeyinplace=yes )
+text(band=header alignment="2" text="Location Id" border="0" color="0" x="14" y="8" height="56" width="274" html.valueishtml="0"  name=location_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Job" border="0" color="0" x="306" y="8" height="56" width="160" html.valueishtml="0"  name=job_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Display Order" border="0" color="0" x="480" y="8" height="56" width="302" html.valueishtml="0"  name=display_order_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Address 1" border="0" color="0" x="795" y="8" height="56" width="823" html.valueishtml="0"  name=address_1_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Address 2" border="0" color="0" x="1632" y="8" height="56" width="827" html.valueishtml="0"  name=address_2_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="City" border="0" color="0" x="2473" y="8" height="56" width="366" html.valueishtml="0"  name=city_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Province" border="0" color="0" x="2853" y="8" height="56" width="192" html.valueishtml="0"  name=province_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Postal" border="0" color="0" x="3058" y="8" height="56" width="1166" html.valueishtml="0"  name=postal_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Contact" border="0" color="0" x="4238" y="8" height="56" width="594" html.valueishtml="0"  name=contact_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Contact Phone" border="0" color="0" x="4846" y="8" height="56" width="1166" html.valueishtml="0"  name=contact_phone_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Add User Id" border="0" color="0" x="6025" y="8" height="56" width="1166" html.valueishtml="0"  name=add_user_id_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Add Datetime" border="0" color="0" x="7205" y="8" height="56" width="503" html.valueishtml="0"  name=add_datetime_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="2" text="Active Flag" border="0" color="0" x="7721" y="8" height="56" width="247" html.valueishtml="0"  name=active_flag_t visible="1"  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+text(band=header alignment="0" text="Country" border="0" color="33554432" x="7977" y="4" height="76" width="64" html.valueishtml="0"  name=country_t visible="1"  font.face="Tahoma" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=1 alignment="1" tabsequence=10 border="0" color="0" x="14" y="8" height="68" width="274" format="[general]" html.valueishtml="0"  name=location_id visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=2 alignment="0" tabsequence=30 border="0" color="0" x="306" y="8" height="68" width="160" format="[general]" html.valueishtml="0"  name=job visible="1" edit.limit=6 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=3 alignment="1" tabsequence=40 border="0" color="0" x="480" y="8" height="68" width="302" format="[general]" html.valueishtml="0"  name=display_order visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=4 alignment="0" tabsequence=50 border="0" color="0" x="795" y="8" height="68" width="823" format="[general]" html.valueishtml="0"  name=address_1 visible="1" edit.limit=35 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=5 alignment="0" tabsequence=60 border="0" color="0" x="1632" y="8" height="68" width="827" format="[general]" html.valueishtml="0"  name=address_2 visible="1" edit.limit=35 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=6 alignment="0" tabsequence=70 border="0" color="0" x="2473" y="8" height="68" width="366" format="[general]" html.valueishtml="0"  name=city visible="1" edit.limit=15 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=7 alignment="0" tabsequence=80 border="0" color="0" x="2853" y="8" height="68" width="192" format="[general]" html.valueishtml="0"  name=province visible="1" edit.limit=2 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=8 alignment="0" tabsequence=90 border="0" color="0" x="3058" y="8" height="68" width="1166" format="[general]" html.valueishtml="0"  name=postal visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=9 alignment="0" tabsequence=100 border="0" color="0" x="4238" y="8" height="68" width="594" format="[general]" html.valueishtml="0"  name=contact visible="1" edit.limit=25 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=10 alignment="0" tabsequence=110 border="0" color="0" x="4846" y="8" height="68" width="1166" format="[general]" html.valueishtml="0"  name=contact_phone visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=11 alignment="0" tabsequence=120 border="0" color="0" x="6025" y="8" height="68" width="1166" format="[general]" html.valueishtml="0"  name=add_user_id visible="1" edit.limit=50 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=12 alignment="0" tabsequence=130 border="0" color="0" x="7205" y="8" height="68" width="503" format="[shortdate] [time]" html.valueishtml="0"  name=add_datetime visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=13 alignment="0" tabsequence=140 border="0" color="0" x="7721" y="8" height="68" width="247" format="[general]" html.valueishtml="0"  name=active_flag visible="1" edit.limit=1 edit.case=any edit.focusrectangle=no edit.autoselect=yes edit.autohscroll=yes  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+column(band=detail id=14 alignment="0" tabsequence=150 border="0" color="0" x="7982" y="0" height="56" width="59" format="[general]" html.valueishtml="0"  name=country visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-8" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="16777215" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" pagingmethod=0 generatedddwframes="1" )
+xhtmlgen() cssgen(sessionspecific="0" )
+xmlgen(inline="0" )
+xsltgen()
+jsgen()
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+export.xhtml()
+ 

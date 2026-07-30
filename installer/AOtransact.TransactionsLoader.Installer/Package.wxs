@@ -1,0 +1,182 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="AOTransact Transactions Loader"
+           Manufacturer="Agency Online"
+           Version="1.0.1"
+           UpgradeCode="F1A8E5BB-3EB5-4BEA-8E8A-6CC4B5B64D0B"
+           Compressed="yes"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of AOTransact Transactions Loader is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Launch Message="AOTransact Transactions Loader requires 64-bit Windows." Condition="VersionNT64" />
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="AOTRANSACTDIR" Name="AOtransact">
+        <Directory Id="TRANSACTIONSLOADERDIR" Name="TransactionsLoader">
+          <Directory Id="DEDIR" Name="de" />
+          <Directory Id="ESDIR" Name="es" />
+          <Directory Id="FRDIR" Name="fr" />
+          <Directory Id="ITDIR" Name="it" />
+          <Directory Id="JADIR" Name="ja" />
+          <Directory Id="KODIR" Name="ko" />
+          <Directory Id="PTBRDIR" Name="pt-BR" />
+          <Directory Id="RUDIR" Name="ru" />
+          <Directory Id="ZHHANSDIR" Name="zh-Hans" />
+          <Directory Id="ZHHANTDIR" Name="zh-Hant" />
+          <Directory Id="RUNTIMESDIR" Name="runtimes">
+            <Directory Id="RUNTIMEWINDIR" Name="win">
+              <Directory Id="RUNTIMEWINLIBDIR" Name="lib">
+                <Directory Id="RUNTIMEWINLIBNET8DIR" Name="net8.0" />
+              </Directory>
+            </Directory>
+            <Directory Id="RUNTIMEWINARMDIR" Name="win-arm">
+              <Directory Id="RUNTIMEWINARMNATIVEDIR" Name="native" />
+            </Directory>
+            <Directory Id="RUNTIMEWINARM64DIR" Name="win-arm64">
+              <Directory Id="RUNTIMEWINARM64NATIVEDIR" Name="native" />
+            </Directory>
+            <Directory Id="RUNTIMEWINX64DIR" Name="win-x64">
+              <Directory Id="RUNTIMEWINX64NATIVEDIR" Name="native" />
+            </Directory>
+            <Directory Id="RUNTIMEWINX86DIR" Name="win-x86">
+              <Directory Id="RUNTIMEWINX86NATIVEDIR" Name="native" />
+            </Directory>
+          </Directory>
+        </Directory>
+        <Directory Id="LOGSDIR" Name="Logs" />
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="AOTransact Transactions Loader" Level="1">
+      <ComponentRef Id="TransactionsLoaderFolderComponent" />
+      <ComponentRef Id="TransactionsLoaderRootFilesComponent" />
+      <ComponentRef Id="TransactionsLoaderConfigComponent" />
+      <ComponentRef Id="TransactionsLoaderScriptsComponent" />
+      <ComponentRef Id="LogsFolderComponent" />
+      <ComponentRef Id="DeResourcesComponent" />
+      <ComponentRef Id="EsResourcesComponent" />
+      <ComponentRef Id="FrResourcesComponent" />
+      <ComponentRef Id="ItResourcesComponent" />
+      <ComponentRef Id="JaResourcesComponent" />
+      <ComponentRef Id="KoResourcesComponent" />
+      <ComponentRef Id="PtBrResourcesComponent" />
+      <ComponentRef Id="RuResourcesComponent" />
+      <ComponentRef Id="ZhHansResourcesComponent" />
+      <ComponentRef Id="ZhHantResourcesComponent" />
+      <ComponentRef Id="WinRuntimeComponent" />
+      <ComponentRef Id="WinArmNativeComponent" />
+      <ComponentRef Id="WinArm64NativeComponent" />
+      <ComponentRef Id="WinX64NativeComponent" />
+      <ComponentRef Id="WinX86NativeComponent" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <Component Id="TransactionsLoaderFolderComponent" Directory="TRANSACTIONSLOADERDIR" Guid="5B87C5F6-F9A4-4AE0-9F32-483D03C6E78A" Bitness="always64">
+      <CreateFolder />
+      <RegistryValue Root="HKLM" Key="Software\Agency Online\AOTransact\TransactionsLoader" Name="InstallFolder" Type="string" Value="installed" KeyPath="yes" />
+    </Component>
+
+    <Component Id="TransactionsLoaderRootFilesComponent" Directory="TRANSACTIONSLOADERDIR" Guid="E5197047-0C5A-4BC8-8BD4-4C0708E2C1E0" Bitness="always64">
+      <File Id="TransactionsLoaderExe" Source="$(var.PublishDir)\AOtransact.TransactionsLoader.exe" KeyPath="yes" />
+      <File Source="$(var.PublishDir)\AOtransact.TransactionsLoader.deps.json" />
+      <File Source="$(var.PublishDir)\AOtransact.TransactionsLoader.dll" />
+      <File Source="$(var.PublishDir)\AOtransact.TransactionsLoader.pdb" />
+      <File Source="$(var.PublishDir)\AOtransact.TransactionsLoader.runtimeconfig.json" />
+      <File Source="$(var.PublishDir)\Azure.Core.dll" />
+      <File Source="$(var.PublishDir)\Azure.Identity.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.Bcl.AsyncInterfaces.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.Data.SqlClient.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.Data.SqlClient.SNI.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.Identity.Client.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.Identity.Client.Extensions.Msal.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.Abstractions.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.JsonWebTokens.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.Logging.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.Protocols.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.IdentityModel.Tokens.dll" />
+      <File Source="$(var.PublishDir)\Microsoft.SqlServer.Server.dll" />
+      <File Source="$(var.PublishDir)\System.ClientModel.dll" />
+      <File Source="$(var.PublishDir)\System.Configuration.ConfigurationManager.dll" />
+      <File Source="$(var.PublishDir)\System.Diagnostics.EventLog.dll" />
+      <File Source="$(var.PublishDir)\System.Diagnostics.EventLog.Messages.dll" />
+      <File Source="$(var.PublishDir)\System.IdentityModel.Tokens.Jwt.dll" />
+      <File Source="$(var.PublishDir)\System.Memory.Data.dll" />
+      <File Source="$(var.PublishDir)\System.Runtime.Caching.dll" />
+      <File Source="$(var.PublishDir)\System.Security.Cryptography.ProtectedData.dll" />
+    </Component>
+
+    <Component Id="TransactionsLoaderConfigComponent" Directory="TRANSACTIONSLOADERDIR" Guid="8F6686A1-D1DE-4AC0-A26C-EF1627FF94B4" Bitness="always64">
+      <File Id="ProductionSampleConfigFile" Source="$(var.ToolsDir)\transactions-loader.config.production.sample.json" KeyPath="yes" />
+      <File Source="$(var.ToolsDir)\transactions-loader.config.sample.json" />
+      <File Source="$(var.ToolsDir)\transactions-loader.config.erplink.json" />
+      <File Source="$(var.ToolsDir)\transactions-loader.config.erplink.all.json" />
+    </Component>
+
+    <Component Id="TransactionsLoaderScriptsComponent" Directory="TRANSACTIONSLOADERDIR" Guid="7DE6A2EF-C28C-4A25-8DCE-C0981A1E58B0" Bitness="always64">
+      <File Id="InstallTransactionsLoaderScript" Source="$(var.ToolsDir)\Install-TransactionsLoader.ps1" KeyPath="yes" />
+      <File Source="$(var.ToolsDir)\Publish-TransactionsLoader.ps1" />
+      <File Source="$(var.ToolsDir)\sqlagent-job-step.example.sql" />
+      <File Source="$(var.ToolsDir)\sqlagent-job.pls.erplink.sql" />
+      <File Source="$(var.ToolsDir)\RunTransactions.vNext.sql" />
+      <File Source="$(var.ToolsDir)\README.md" />
+    </Component>
+
+    <Component Id="LogsFolderComponent" Directory="LOGSDIR" Guid="3C233C09-8649-4B86-892C-B4C4BFE23377" Bitness="always64">
+      <CreateFolder />
+      <RegistryValue Root="HKLM" Key="Software\Agency Online\AOTransact\TransactionsLoader" Name="LogsFolder" Type="string" Value="installed" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DeResourcesComponent" Directory="DEDIR" Guid="D7C00EA4-3FB9-4E71-8FCA-DBA20F205AC6" Bitness="always64">
+      <File Source="$(var.PublishDir)\de\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="EsResourcesComponent" Directory="ESDIR" Guid="A5E5EA16-C1D6-488D-B3D9-0D28475AA932" Bitness="always64">
+      <File Source="$(var.PublishDir)\es\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="FrResourcesComponent" Directory="FRDIR" Guid="B9BFA2A9-638A-4C84-8FE9-18F0F0EEA498" Bitness="always64">
+      <File Source="$(var.PublishDir)\fr\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="ItResourcesComponent" Directory="ITDIR" Guid="7D75193D-32E0-4C73-8544-B7BEA764D9C1" Bitness="always64">
+      <File Source="$(var.PublishDir)\it\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="JaResourcesComponent" Directory="JADIR" Guid="8D66CAB1-70DE-46E2-9FC6-C1E3A59C52BE" Bitness="always64">
+      <File Source="$(var.PublishDir)\ja\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="KoResourcesComponent" Directory="KODIR" Guid="52AF289A-DDF0-4C05-B449-72D7582192B3" Bitness="always64">
+      <File Source="$(var.PublishDir)\ko\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="PtBrResourcesComponent" Directory="PTBRDIR" Guid="2FE34B01-6B0D-4A5E-B7D9-C610D22BF5CD" Bitness="always64">
+      <File Source="$(var.PublishDir)\pt-BR\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="RuResourcesComponent" Directory="RUDIR" Guid="E2A3A867-D8A7-4C34-B1BA-0E74D67E3D03" Bitness="always64">
+      <File Source="$(var.PublishDir)\ru\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="ZhHansResourcesComponent" Directory="ZHHANSDIR" Guid="B4045A4D-8D3F-4A6C-8E75-820557EC7BEB" Bitness="always64">
+      <File Source="$(var.PublishDir)\zh-Hans\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="ZhHantResourcesComponent" Directory="ZHHANTDIR" Guid="B4E99A14-12FA-4A52-A70B-2687B58F716B" Bitness="always64">
+      <File Source="$(var.PublishDir)\zh-Hant\Microsoft.Data.SqlClient.resources.dll" KeyPath="yes" />
+    </Component>
+
+    <Component Id="WinRuntimeComponent" Directory="RUNTIMEWINLIBNET8DIR" Guid="E18C0145-1F66-490F-B279-392B8E65F99F" Bitness="always64">
+      <File Source="$(var.PublishDir)\runtimes\win\lib\net8.0\Microsoft.Data.SqlClient.dll" KeyPath="yes" />
+      <File Source="$(var.PublishDir)\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
+      <File Source="$(var.PublishDir)\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+      <File Source="$(var.PublishDir)\runtimes\win\lib\net8.0\System.Runtime.Caching.dll" />
+    </Component>
+
+    <Component Id="WinArmNativeComponent" Directory="RUNTIMEWINARMNATIVEDIR" Guid="D1E09354-8B07-4D0D-8D61-E7AB2D61A6FD" Bitness="always64">
+      <File Source="$(var.PublishDir)\runtimes\win-arm\native\Microsoft.Data.SqlClient.SNI.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="WinArm64NativeComponent" Directory="RUNTIMEWINARM64NATIVEDIR" Guid="A4058812-77F8-4C74-9F8A-7195ECF0CCFE" Bitness="always64">
+      <File Source="$(var.PublishDir)\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="WinX64NativeComponent" Directory="RUNTIMEWINX64NATIVEDIR" Guid="675C14C0-066D-4E57-BE4E-0E3D62F64306" Bitness="always64">
+      <File Source="$(var.PublishDir)\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll" KeyPath="yes" />
+    </Component>
+    <Component Id="WinX86NativeComponent" Directory="RUNTIMEWINX86NATIVEDIR" Guid="E8746EE9-6EF7-4CB4-91D3-894AEF03B4ED" Bitness="always64">
+      <File Source="$(var.PublishDir)\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll" KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>

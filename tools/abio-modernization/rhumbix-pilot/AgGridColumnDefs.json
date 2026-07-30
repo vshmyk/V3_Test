@@ -1,0 +1,125 @@
+{
+  "importErrors": {
+    "defaultColDef": {
+      "sortable": true,
+      "filter": true,
+      "resizable": true
+    },
+    "rowModelType": "serverSide",
+    "defaultSortModel": [
+      {
+        "colId": "errorDateTime",
+        "sort": "desc"
+      }
+    ],
+    "columnDefs": [
+      {
+        "field": "errorId",
+        "headerName": "Error #",
+        "type": "numericColumn",
+        "width": 110
+      },
+      {
+        "field": "employeeId",
+        "headerName": "Employee",
+        "width": 130
+      },
+      {
+        "field": "shiftDate",
+        "headerName": "Date",
+        "filter": "agDateColumnFilter",
+        "width": 130
+      },
+      {
+        "field": "rhumbixProject",
+        "headerName": "Project",
+        "width": 140
+      },
+      {
+        "field": "rhumbixCostCode",
+        "headerName": "Cost Code",
+        "width": 140
+      },
+      {
+        "field": "errorType",
+        "headerName": "Error Type",
+        "width": 160
+      },
+      {
+        "field": "errorMessage",
+        "headerName": "Error Message",
+        "flex": 1,
+        "minWidth": 280,
+        "wrapText": true,
+        "autoHeight": true
+      },
+      {
+        "field": "errorDateTime",
+        "headerName": "Time",
+        "filter": "agDateColumnFilter",
+        "width": 180
+      }
+    ]
+  },
+  "syncHistory": {
+    "defaultColDef": {
+      "sortable": true,
+      "filter": true,
+      "resizable": true
+    },
+    "rowModelType": "serverSide",
+    "defaultSortModel": [
+      {
+        "colId": "syncDateTime",
+        "sort": "desc"
+      }
+    ],
+    "columnDefs": [
+      {
+        "field": "syncDateTime",
+        "headerName": "Date/Time",
+        "filter": "agDateColumnFilter",
+        "width": 180
+      },
+      {
+        "field": "syncType",
+        "headerName": "Type",
+        "width": 130
+      },
+      {
+        "field": "recordsAttempted",
+        "headerName": "Attempted",
+        "type": "numericColumn",
+        "width": 130
+      },
+      {
+        "field": "recordsCreated",
+        "headerName": "Created",
+        "type": "numericColumn",
+        "width": 120
+      },
+      {
+        "field": "recordsUpdated",
+        "headerName": "Updated",
+        "type": "numericColumn",
+        "width": 120
+      },
+      {
+        "field": "recordsFailed",
+        "headerName": "Failed",
+        "type": "numericColumn",
+        "width": 110
+      },
+      {
+        "field": "statusDisplay",
+        "headerName": "Status",
+        "width": 130,
+        "cellRenderer": "statusBadgeRenderer",
+        "cellClassRules": {
+          "status-failed": "data.recordsFailed > 0",
+          "status-success": "data.recordsFailed === 0"
+        }
+      }
+    ]
+  }
+}

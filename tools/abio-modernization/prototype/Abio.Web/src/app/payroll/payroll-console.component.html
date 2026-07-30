@@ -1,0 +1,339 @@
+<main class="legacy-shell" [class.embedded-shell]="embedded">
+  <aside class="legacy-nav" *ngIf="!embedded" aria-label="Abio legacy menu">
+    <section class="workspace-card">
+      <p class="workspace-card__eyebrow">Company book</p>
+      <form class="book-switcher">
+        <label>
+          <span>{{ selectedBook }}</span>
+          <select [(ngModel)]="selectedBook" name="payrollBook" (change)="refreshAll()">
+            <option *ngFor="let book of books" [value]="book.book">{{ book.book }} - {{ book.description }}</option>
+          </select>
+        </label>
+      </form>
+    </section>
+
+    <section class="legacy-section legacy-section--menu modern-menu-frame">
+      <header class="legacy-menu-title">
+        <span>Menu</span>
+      </header>
+
+      <div class="menu-search">
+        <label>
+          <span>Search menu</span>
+          <input
+            type="search"
+            [value]="menuSearchText"
+            placeholder="Search label, program, or /cbc"
+            (input)="updateMenuSearch($any($event.target).value)" />
+        </label>
+        <button type="button" [disabled]="!menuSearchText" (click)="clearMenuSearch()">Clear</button>
+      </div>
+
+      <nav class="legacy-menu">
+        <ng-container *ngFor="let module of filteredLegacyMenuModules; trackBy: trackMenuNode">
+          <button
+            type="button"
+            class="legacy-menu-row level-1"
+            [class.active]="isLegacyNodeActive(module)"
+            [class.expanded]="isLegacyNodeExpanded(module)"
+            (click)="selectLegacyNode(module)">
+            <span class="menu-icon" [ngClass]="menuIconClass(module)" aria-hidden="true"></span>
+            <span class="menu-label">{{ module.label }}</span>
+            <span class="menu-key">/{{ menuVisibleShortcut(module) }}</span>
+          </button>
+
+          <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(module)">
+            <ng-container *ngFor="let child of module.children; trackBy: trackMenuNode">
+              <button
+                type="button"
+                class="legacy-menu-row level-2"
+                [class.active]="isLegacyNodeActive(child)"
+                [class.expanded]="isLegacyNodeExpanded(child)"
+                [class.pending]="!child.windowName && !child.children.length"
+                [title]="child.microhelp || child.description"
+                (click)="selectLegacyNode(child)">
+                <span class="menu-icon" [ngClass]="menuIconClass(child)" aria-hidden="true"></span>
+                <span class="menu-label">{{ child.label }}</span>
+                <span class="menu-key">/{{ menuVisibleShortcut(child) }}</span>
+              </button>
+
+              <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(child)">
+                <button
+                  type="button"
+                  class="legacy-menu-row level-3"
+                  *ngFor="let grandchild of child.children; trackBy: trackMenuNode"
+                  [class.active]="isLegacyNodeActive(grandchild)"
+                  [class.report-row]="grandchild.itemType === 'report'"
+                  [class.pending]="!grandchild.windowName"
+                  [title]="grandchild.microhelp || grandchild.description"
+                  (click)="selectLegacyNode(grandchild)">
+                  <span class="menu-icon" [ngClass]="menuIconClass(grandchild)" aria-hidden="true"></span>
+                  <span class="menu-label">{{ grandchild.label }}</span>
+                  <span class="menu-key">/{{ menuVisibleShortcut(grandchild) }}</span>
+                </button>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </nav>
+
+      <p class="menu-empty" *ngIf="menuSearchText && filteredLegacyMenuModules.length === 0">No menu items matched.</p>
+      <p class="legacy-menu-status">{{ menuStatusMessage }}</p>
+    </section>
+  </aside>
+
+  <section class="payroll-page">
+  <header class="payroll-topbar">
+    <div>
+      <p class="eyebrow">Abio NG Payroll</p>
+      <h1>Abio Operations Console</h1>
+    </div>
+  </header>
+
+  <section class="status-band" *ngIf="!selectedRecord">
+    <span>{{ statusMessage }}</span>
+    <button type="button" [disabled]="isLoading" (click)="refresh()">Refresh</button>
+  </section>
+
+  <section class="panel" [class.panel--record]="selectedRecord">
+    <ng-container *ngIf="!selectedRecord; else payrollRecord">
+      <div class="toolbar">
+        <label>
+          <span>Rows</span>
+          <input type="number" min="1" max="1000" [(ngModel)]="rowLimit" (change)="loadActiveView()" />
+        </label>
+
+        <label class="check-row">
+          <input type="checkbox" [(ngModel)]="includeHistory" [disabled]="activeView === 'setup'" (change)="loadActiveView()" />
+          <span>Include history</span>
+        </label>
+      </div>
+
+      <nav class="tabbar">
+        <button
+          *ngFor="let view of views"
+          type="button"
+          [class.active]="activeView === view.key"
+          (click)="selectView(view.key)">
+          {{ view.label }}
+        </button>
+      </nav>
+
+      <div class="list-toolbar">
+        <label>
+          <span>Search {{ activeView === 'setup' ? setupLabel(activeSetup) : viewLabel(activeView) }}</span>
+          <input
+            type="search"
+            [(ngModel)]="searchText"
+            [disabled]="activeView === 'setup'"
+            (keyup.enter)="loadActiveView()"
+            placeholder="Search all fields in this list" />
+        </label>
+        <button type="button" [disabled]="!searchText || activeView === 'setup'" (click)="searchText = ''; loadActiveView()">Clear</button>
+        <select *ngIf="activeView === 'setup'" [(ngModel)]="activeSetup" (change)="selectSetup(activeSetup)">
+          <option *ngFor="let setup of setupViews" [value]="setup.key">{{ setup.label }}</option>
+        </select>
+      </div>
+
+      <ag-grid-angular
+        class="ag-theme-quartz grid"
+        [rowData]="rows"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [quickFilterText]="activeView === 'setup' ? '' : searchText"
+        rowSelection="single"
+        (cellClicked)="onCellClicked($event)">
+      </ag-grid-angular>
+
+      <p class="grid-hint">
+        Click a blue hyperlink to open that Payroll record on this page. Write commands remain guarded until migrated from PB.
+      </p>
+    </ng-container>
+
+    <ng-template #payrollRecord>
+      <article class="payroll-record-workspace" *ngIf="selectedRecord" appArrowFieldNavigation>
+        <section class="legacy-record-window">
+          <header class="legacy-window-title">
+            <span class="legacy-window-icon" aria-hidden="true"></span>
+            <strong>{{ recordTitle }}</strong>
+            <button
+              type="button"
+              class="legacy-close-button"
+              title="Close and return to {{ viewLabel(activeView) }} list"
+              [attr.aria-label]="'Close record and return to ' + viewLabel(activeView) + ' list'"
+              (click)="closeRecord()">
+              X
+            </button>
+          </header>
+
+          <nav class="legacy-record-tabs" aria-label="Payroll record tabs">
+            <button
+              *ngFor="let tab of selectedRecord.tabs"
+              type="button"
+              [class.active]="selectedRecordTab === tab"
+              (click)="setRecordTab(tab)">
+              {{ tab }}
+            </button>
+          </nav>
+
+          <div class="legacy-action-buttons" aria-label="Payroll record actions">
+            <p class="legacy-action-status" *ngIf="commandResult" aria-live="polite">
+              {{ commandResult.message }}
+            </p>
+            <button
+              *ngIf="isPayrollRecordEditMode"
+              type="button"
+              class="primary-action"
+              [disabled]="!hasPayrollRecordEditChanges"
+              (pointerdown)="handlePayrollEditActionPointerDown('save', $event)"
+              (click)="savePayrollRecordEdit()">
+              Save
+            </button>
+            <button
+              *ngIf="isPayrollRecordEditMode"
+              type="button"
+              (pointerdown)="handlePayrollEditActionPointerDown('cancel', $event)"
+              (click)="cancelPayrollRecordEdit()">
+              Cancel
+            </button>
+            <button
+              *ngFor="let command of currentCommands"
+              [hidden]="isPayrollRecordEditMode"
+              type="button"
+              [class.primary-action]="isPayrollChangeCommand(command.name)"
+              [title]="command.description"
+              (pointerdown)="handlePayrollCommandPointerDown(command.name, $event)"
+              (click)="handlePayrollCommand(command.name)">
+              {{ payrollCommandLabel(command) }}
+            </button>
+            <span class="legacy-edit-mode-chip" *ngIf="isPayrollRecordEditMode">Edit mode</span>
+          </div>
+
+          <div class="legacy-record-body">
+            <section class="legacy-datawindow-form" *ngIf="activeRecordFields.length > 0">
+              <fieldset class="legacy-fieldset">
+                <legend>{{ activeRecordFieldsetTitle }}</legend>
+                <div class="legacy-section-grid">
+                  <div class="legacy-section-column">
+                    <label
+                      class="legacy-field"
+                      *ngFor="let field of activeRecordLeftFields"
+                      [class.required-field]="isRequiredField(field[0])"
+                      [title]="validationHintForField(field[0])">
+                      <span>{{ formatFieldLabel(field[0]) }}</span>
+                      <input
+                        type="text"
+                        [readOnly]="!isPayrollRecordFieldEditable(field[0])"
+                        [class.is-editable]="isPayrollRecordFieldEditable(field[0])"
+                        [value]="field[1] ?? ''"
+                        (input)="updatePayrollRecordEditField(field[0], $event)" />
+                    </label>
+                  </div>
+                  <div class="legacy-section-column" *ngIf="activeRecordRightFields.length > 0">
+                    <label
+                      class="legacy-field"
+                      *ngFor="let field of activeRecordRightFields"
+                      [class.required-field]="isRequiredField(field[0])"
+                      [title]="validationHintForField(field[0])">
+                      <span>{{ formatFieldLabel(field[0]) }}</span>
+                      <input
+                        type="text"
+                        [readOnly]="!isPayrollRecordFieldEditable(field[0])"
+                        [class.is-editable]="isPayrollRecordFieldEditable(field[0])"
+                        [value]="field[1] ?? ''"
+                        (input)="updatePayrollRecordEditField(field[0], $event)" />
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+            </section>
+
+            <div class="legacy-tab-grid" *ngIf="activeRecordChildKey">
+              <p class="legacy-tab-status" *ngIf="activeRecordRows.length > 0">
+                {{ selectedRecordTab }} rows loaded from Payroll middle tier.
+              </p>
+              <p class="legacy-tab-status" *ngIf="activeRecordRows.length === 0">
+                No {{ selectedRecordTab }} rows found for this {{ selectedRecord.recordType }}.
+              </p>
+              <ag-grid-angular
+                *ngIf="activeRecordRows.length > 0"
+                class="ag-theme-quartz legacy-tab-ag-grid"
+                [rowData]="activeRecordRows"
+                [columnDefs]="activeRecordColumnDefs"
+                [defaultColDef]="defaultColDef">
+              </ag-grid-angular>
+            </div>
+          </div>
+        </section>
+
+        <aside class="payroll-insight-panel" aria-label="Payroll facts and migration status">
+          <header class="payroll-insight-panel__header">
+            <p class="eyebrow">Payroll safety</p>
+            <h3>{{ selectedRecord.recordType | titlecase }}</h3>
+            <span>{{ inventory?.status ?? 'middle-tier foundation' }}</span>
+          </header>
+
+          <section class="payroll-insight-card">
+            <h4>Navigation</h4>
+            <p>
+              This record opened in the same-page pattern used by Job Entry.
+              Use the close button to return to {{ viewLabel(activeView) }}.
+            </p>
+          </section>
+
+          <section class="payroll-insight-card">
+            <h4>Guarded commands</h4>
+            <p>
+              Add/Edit/Recalculate/Approve/Issue/Post are visible as legacy commands, but blocked until the PB program-layer command is migrated.
+            </p>
+          </section>
+
+          <section class="payroll-insight-card" *ngIf="activeValidationRules.length > 0">
+            <h4>Validation coverage</h4>
+            <p>
+              {{ activeValidationRules.length }} legacy validation rules are registered for this record type.
+              Required and fixed-value checks run in Angular and .NET; advanced rules remain backend-command migration targets.
+            </p>
+          </section>
+
+          <section class="payroll-insight-card payroll-insight-card--warning" *ngIf="activeFrontendValidationErrors.length > 0">
+            <h4>Frontend validation</h4>
+            <ul>
+              <li *ngFor="let error of activeFrontendValidationErrors">
+                {{ formatFieldLabel(error.field) }}: {{ error.message }}
+              </li>
+            </ul>
+          </section>
+
+          <section class="payroll-insight-card" *ngIf="backendOnlyValidationRules.length > 0">
+            <h4>Backend-only rules</h4>
+            <ul>
+              <li *ngFor="let rule of backendOnlyValidationRules.slice(0, 5)">
+                {{ formatFieldLabel(rule.field) }}: {{ rule.message }}
+              </li>
+            </ul>
+          </section>
+
+          <section class="payroll-insight-card" *ngIf="commandResult">
+            <h4>Legacy references</h4>
+            <ul>
+              <li *ngFor="let reference of commandResult.requiredLegacyReferences">
+                {{ reference.library }}/{{ reference.objectName }}
+              </li>
+            </ul>
+          </section>
+
+          <section class="payroll-insight-card payroll-insight-card--warning" *ngIf="commandResult?.validationErrors?.length">
+            <h4>Backend validation</h4>
+            <ul>
+              <li *ngFor="let error of commandResult?.validationErrors">
+                {{ formatFieldLabel(error.field) }}: {{ error.message }}
+              </li>
+            </ul>
+          </section>
+        </aside>
+      </article>
+    </ng-template>
+  </section>
+  </section>
+</main>

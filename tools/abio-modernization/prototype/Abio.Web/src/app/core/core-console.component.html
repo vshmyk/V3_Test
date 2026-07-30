@@ -1,0 +1,800 @@
+<main class="legacy-shell">
+  <aside class="legacy-nav" [class.quick-access-active]="menuQuickAccessActive" aria-label="Abio legacy menu">
+    <header class="nav-brand">
+      <strong>Abio NG</strong>
+    </header>
+
+    <section class="workspace-card">
+      <form class="book-switcher" [formGroup]="form">
+        <label>
+          <span>Company: <strong>{{ companyName }}</strong></span>
+          <select formControlName="book" (change)="refreshAll()">
+            <option *ngFor="let book of books" [value]="book.book">{{ book.book }} - {{ book.description }}</option>
+          </select>
+        </label>
+      </form>
+    </section>
+
+    <section class="legacy-section legacy-section--menu modern-menu-frame">
+      <header class="legacy-menu-title">
+        <span>Workflows</span>
+        <span class="legacy-shortcut-badge" *ngIf="menuQuickAccessActive">shortcut mode</span>
+      </header>
+
+      <div class="menu-search">
+        <label>
+          <span>Search workflows</span>
+          <input
+            #menuSearch
+            type="search"
+            [value]="menuSearchText"
+            placeholder="Search workflow, function, report, or /ahb"
+            (input)="updateMenuSearch(menuSearch.value)" />
+        </label>
+        <button type="button" [disabled]="!menuSearchText" (click)="clearMenuSearch()">Clear</button>
+      </div>
+
+      <nav class="modern-workflow-menu modern-workflow-menu--legacy-tree" aria-label="Abio NG main menu">
+        <section class="modern-workflow-section" *ngFor="let module of groupedReportMenuModules; trackBy: trackMenuNode">
+          <button
+            type="button"
+            class="modern-workflow-heading legacy-tree-row level-1"
+            [class.active]="isLegacyNodeActive(module)"
+            [class.expanded]="menuSearchText || isLegacyNodeExpanded(module)"
+            (click)="selectLegacyNode(module)">
+            <span class="shortcut-pill" aria-hidden="true">{{ menuVisibleShortcut(module) }}</span>
+            <span class="menu-icon" [ngClass]="menuIconClass(module)" aria-hidden="true"></span>
+            <span class="modern-workflow-label">{{ module.label }}</span>
+            <span class="modern-workflow-chevron" *ngIf="module.children.length" aria-hidden="true">&#8964;</span>
+          </button>
+
+          <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(module)">
+            <ng-container *ngFor="let child of module.children; trackBy: trackMenuNode">
+              <button
+                type="button"
+                class="modern-workflow-link legacy-tree-row level-2"
+                [class.active]="isLegacyNodeActive(child)"
+                [class.expanded]="menuSearchText || isLegacyNodeExpanded(child)"
+                [class.pending]="!child.windowName && !child.children.length"
+                [title]="child.microhelp || child.description"
+                (click)="selectLegacyNode(child)">
+                <span class="shortcut-pill shortcut-pill--item" aria-hidden="true">{{ menuVisibleShortcut(child) }}</span>
+                <span class="mini-icon" [ngClass]="menuIconClass(child)" aria-hidden="true"></span>
+                <span class="modern-workflow-label">{{ child.label }}</span>
+                <span class="modern-workflow-chevron" *ngIf="child.children.length" aria-hidden="true">&#8964;</span>
+              </button>
+
+              <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(child)">
+                <ng-container *ngFor="let grandchild of child.children; trackBy: trackMenuNode">
+                  <button
+                    type="button"
+                    class="modern-workflow-link legacy-tree-row level-3"
+                    [class.active]="isLegacyNodeActive(grandchild)"
+                    [class.report-row]="grandchild.itemType === 'report'"
+                    [class.pending]="!grandchild.windowName && !grandchild.children.length"
+                    [title]="grandchild.microhelp || grandchild.description"
+                    (click)="selectLegacyNode(grandchild)">
+                    <span class="shortcut-pill shortcut-pill--item" aria-hidden="true">{{ menuVisibleShortcut(grandchild) }}</span>
+                    <span class="mini-icon" [ngClass]="menuIconClass(grandchild)" aria-hidden="true"></span>
+                    <span class="modern-workflow-label">{{ grandchild.label }}</span>
+                    <span class="modern-workflow-chevron" *ngIf="grandchild.children.length" aria-hidden="true">&#8964;</span>
+                  </button>
+
+                  <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(grandchild)">
+                    <button
+                      type="button"
+                      class="modern-workflow-link legacy-tree-row level-4"
+                      *ngFor="let report of grandchild.children; trackBy: trackMenuNode"
+                      [class.active]="isLegacyNodeActive(report)"
+                      [class.report-row]="report.itemType === 'report'"
+                      [class.pending]="!report.windowName"
+                      [title]="report.microhelp || report.description"
+                      (click)="selectLegacyNode(report)">
+                      <span class="shortcut-pill shortcut-pill--item" aria-hidden="true">{{ menuVisibleShortcut(report) }}</span>
+                      <span class="mini-icon" [ngClass]="menuIconClass(report)" aria-hidden="true"></span>
+                      <span class="modern-workflow-label">{{ report.label }}</span>
+                    </button>
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </section>
+      </nav>
+
+      <p class="menu-empty" *ngIf="menuSearchText && groupedReportMenuModules.length === 0">No menu items matched.</p>
+      <p class="legacy-menu-status">{{ menuStatusMessage }} {{ modernMenuCoverageLabel }}.</p>
+
+      <nav class="legacy-menu legacy-menu--hidden" aria-label="Legacy menu data source">
+        <ng-container *ngFor="let module of filteredLegacyMenuModules; trackBy: trackMenuNode">
+          <button
+            type="button"
+            class="legacy-menu-row level-1"
+            [class.active]="isLegacyNodeActive(module)"
+            [class.expanded]="isLegacyNodeExpanded(module)"
+            (click)="selectLegacyNode(module)">
+            <span class="menu-icon" [ngClass]="menuIconClass(module)" aria-hidden="true"></span>
+            <span class="menu-label">{{ module.label }}</span>
+            <span class="menu-key">/{{ menuVisibleShortcut(module) }}</span>
+          </button>
+
+          <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(module)">
+            <ng-container *ngFor="let child of module.children; trackBy: trackMenuNode">
+              <button
+                type="button"
+                class="legacy-menu-row level-2"
+                [class.active]="isLegacyNodeActive(child)"
+                [class.expanded]="isLegacyNodeExpanded(child)"
+                [class.pending]="!child.windowName && !child.children.length"
+                [title]="child.microhelp || child.description"
+                (click)="selectLegacyNode(child)">
+                <span class="menu-icon" [ngClass]="menuIconClass(child)" aria-hidden="true"></span>
+                <span class="menu-label">{{ child.label }}</span>
+                <span class="menu-key">/{{ menuVisibleShortcut(child) }}</span>
+              </button>
+
+              <ng-container *ngIf="menuSearchText || isLegacyNodeExpanded(child)">
+                <button
+                  type="button"
+                  class="legacy-menu-row level-3"
+                  *ngFor="let grandchild of child.children; trackBy: trackMenuNode"
+                  [class.active]="isLegacyNodeActive(grandchild)"
+                  [class.report-row]="grandchild.itemType === 'report'"
+                  [class.pending]="!grandchild.windowName"
+                  [title]="grandchild.microhelp || grandchild.description"
+                  (click)="selectLegacyNode(grandchild)">
+                  <span class="menu-icon" [ngClass]="menuIconClass(grandchild)" aria-hidden="true"></span>
+                  <span class="menu-label">{{ grandchild.label }}</span>
+                  <span class="menu-key">/{{ menuVisibleShortcut(grandchild) }}</span>
+                </button>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </nav>
+    </section>
+  </aside>
+
+  <section class="core-page">
+    <header class="app-topbar" *ngIf="!recordView && activeWorkspace === 'core'">
+      <strong>Welcome back, Alex</strong>
+      <nav aria-label="Workspace controls">
+        <button type="button" class="icon-button" title="Help">?</button>
+        <button type="button" class="icon-button notification-button" title="Notifications">
+          <span aria-hidden="true">&#128276;</span>
+          <small>8</small>
+        </button>
+        <span class="avatar" aria-label="Alex Morgan">AM</span>
+        <button type="button" class="icon-button" title="Account">&#8964;</button>
+      </nav>
+    </header>
+
+    <section class="workspace-heading" *ngIf="!recordView && activeWorkspace === 'core'">
+      <h1>Operations Workspace</h1>
+      <button type="button" class="customize-workspace">
+        <span aria-hidden="true">&#9881;</span>
+        Customize Workspace
+      </button>
+    </section>
+
+    <section class="modern-home" *ngIf="!recordView && activeWorkspace === 'core'">
+      <div class="modern-home__cards">
+        <button
+          type="button"
+          class="modern-metric-card"
+          *ngFor="let card of modernLandingCards"
+          [class.good]="card.tone === 'good'"
+          [class.watch]="card.tone === 'watch'"
+          [class.alert]="card.tone === 'alert'"
+          (click)="card.dataset && loadDataset(card.dataset)">
+          <span class="metric-icon" [ngClass]="card.iconClass" aria-hidden="true"></span>
+          <span class="metric-label">{{ card.label }}</span>
+          <strong>{{ card.value }}</strong>
+          <small>{{ card.detail }} <span aria-hidden="true">&rarr;</span></small>
+        </button>
+      </div>
+
+      <article class="modern-recent-card">
+        <header>
+          <h2>Recent Records</h2>
+        </header>
+        <nav class="recent-filter" aria-label="Recent record filters">
+          <button type="button" class="active">All</button>
+          <button type="button" (click)="loadDataset('jobs')">Jobs</button>
+          <button type="button" (click)="loadDataset('ap-invoices')">AP Invoices</button>
+          <button type="button" (click)="loadDataset('timesheets')">Timesheets</button>
+          <button type="button" (click)="openModernMenuLink({ label: 'Employees', iconClass: 'icon-employee', payroll: true, payrollView: 'employees' })">Employees</button>
+          <button type="button" (click)="loadDataset('clients')">Clients</button>
+        </nav>
+        <div class="recent-table" role="table" aria-label="Recent records">
+          <div class="recent-row recent-row--head" role="row">
+            <span>Type</span>
+            <span>Name / Number</span>
+            <span>Details</span>
+            <span>Last Updated</span>
+          </div>
+          <button
+            type="button"
+            class="recent-row"
+            *ngFor="let record of modernRecentRecords"
+            (click)="record.dataset && loadDataset(record.dataset)">
+            <span><i class="mini-record-icon" [ngClass]="record.iconClass" aria-hidden="true"></i>{{ record.type }}</span>
+            <strong>{{ record.name }}</strong>
+            <span>{{ record.detail }}</span>
+            <span>{{ record.updated }}</span>
+          </button>
+        </div>
+        <button type="button" class="text-link" (click)="clearListSearch()">View all recent records <span aria-hidden="true">&rarr;</span></button>
+      </article>
+
+      <aside class="modern-suggested-actions">
+        <header>
+          <h2>Suggested Actions</h2>
+        </header>
+        <button
+          type="button"
+          *ngFor="let action of modernSuggestedActions"
+          (click)="openModernMenuLink(action)">
+          <span class="action-icon" [ngClass]="action.iconClass" aria-hidden="true"></span>
+          <span>
+            <strong>{{ action.label }}</strong>
+            <small>{{ action.detail }}</small>
+          </span>
+          <b aria-hidden="true">&rsaquo;</b>
+        </button>
+        <button type="button" class="text-link" (click)="openModernMenuLink({ label: 'My Tasks', iconClass: 'icon-task', groupId: 'home' })">View all tasks <span aria-hidden="true">&rarr;</span></button>
+      </aside>
+
+      <article class="modern-kpi-card">
+        <header>
+          <h2>Key Performance Indicators</h2>
+          <div>
+            <button type="button">This Month &#8964;</button>
+            <button type="button" class="text-link">View Dashboard <span aria-hidden="true">&rarr;</span></button>
+          </div>
+        </header>
+        <div class="kpi-grid">
+          <section *ngFor="let kpi of modernKpis" [class.down]="kpi.direction === 'down'">
+            <span>{{ kpi.label }}</span>
+            <strong>{{ kpi.value }}</strong>
+            <small>{{ kpi.delta }}</small>
+          </section>
+        </div>
+      </article>
+    </section>
+
+    <app-payroll-console
+      class="embedded-payroll"
+      *ngIf="activeWorkspace === 'payroll'"
+      [embedded]="true"
+      [requestedView]="activePayrollView">
+    </app-payroll-console>
+
+    <section class="job-report-workspace" *ngIf="activeWorkspace === 'job-report'">
+      <article class="job-report-card" *ngIf="activeJobReport; else jobReportLoading">
+        <header class="job-report-header">
+          <div>
+            <p class="eyebrow">J/C Legacy Report</p>
+            <h1>{{ activeJobReport.response.title }}</h1>
+          </div>
+          <button type="button" (click)="openJobReport(activeJobReport.node, false)">Refresh</button>
+        </header>
+
+        <form class="job-report-filters" (submit)="$event.preventDefault(); applyJobReportFilters()">
+          <label *ngFor="let filter of activeJobReportFilters">
+            <span>{{ filter.label }}</span>
+            <select
+              *ngIf="filter.type === 'select'; else textReportFilter"
+              [ngModel]="jobReportFilterDraft[filter.key] || ''"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="updateJobReportFilter(filter.key, $any($event))">
+              <option *ngFor="let option of filter.options" [value]="option.value">{{ option.label }}</option>
+            </select>
+            <ng-template #textReportFilter>
+              <input
+                [type]="filter.type"
+                [ngModel]="jobReportFilterDraft[filter.key] || ''"
+                [ngModelOptions]="{ standalone: true }"
+                [placeholder]="filter.placeholder || ''"
+                (ngModelChange)="updateJobReportFilter(filter.key, $any($event))" />
+            </ng-template>
+          </label>
+          <div class="job-report-filter-actions">
+            <button type="submit">Apply filters</button>
+            <button type="button" (click)="clearJobReportFilters()">Clear filters</button>
+          </div>
+        </form>
+
+        <div class="job-report-meta">
+          <span *ngFor="let filter of activeJobReport.response.filters">{{ filter }}</span>
+        </div>
+
+        <div class="list-toolbar">
+          <label>
+            <span>Search report</span>
+            <input
+              #jobReportSearch
+              type="search"
+              [value]="jobReportSearchText"
+              placeholder="Search all fields in this report"
+              (input)="updateJobReportSearch(jobReportSearch.value)" />
+          </label>
+          <button type="button" [disabled]="!jobReportSearchText" (click)="clearJobReportSearch()">Clear</button>
+        </div>
+
+        <ag-grid-angular
+          class="ag-theme-quartz grid job-report-grid"
+          [rowData]="activeJobReport.response.rows"
+          [columnDefs]="activeJobReport.columnDefs"
+          [defaultColDef]="defaultColDef"
+          [quickFilterText]="jobReportSearchText">
+        </ag-grid-angular>
+
+        <p class="grid-hint">Click a blue job value to open the Job record.</p>
+      </article>
+
+      <ng-template #jobReportLoading>
+        <article class="job-report-card">
+          <p class="grid-hint">{{ jobReportMessage || 'Loading Job report...' }}</p>
+          <button
+            type="button"
+            *ngIf="selectedMenuNode && jobReportMessage && !isLoading"
+            (click)="openJobReport(selectedMenuNode, false)">
+            Try again
+          </button>
+        </article>
+      </ng-template>
+    </section>
+
+    <section class="panel" *ngIf="activeWorkspace === 'core'" [class.panel--record]="recordView">
+      <ng-container *ngIf="!recordView; else recordForm">
+        <nav class="tabbar">
+          <button
+            type="button"
+            *ngFor="let tab of tabs"
+            [class.active]="activeTab === tab.id"
+            (click)="loadDataset(tab.id)">
+            {{ tab.label }}
+          </button>
+        </nav>
+
+        <div class="list-toolbar">
+          <label>
+            <span>Search {{ labelFor(activeTab) }}</span>
+            <input
+              #listSearch
+              type="search"
+              [value]="listSearchText"
+              placeholder="Search all fields in this list"
+              (input)="updateListSearch(listSearch.value)" />
+          </label>
+          <button type="button" [disabled]="!listSearchText" (click)="clearListSearch()">Clear</button>
+        </div>
+
+        <ag-grid-angular
+          class="ag-theme-quartz grid"
+          [rowData]="rows"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [quickFilterText]="listSearchText">
+        </ag-grid-angular>
+
+        <p class="grid-hint">
+          Click a blue hyperlink to open that record on this page. Use search to filter across all visible fields.
+        </p>
+      </ng-container>
+
+      <ng-template #recordForm>
+        <article class="record-form" *ngIf="recordView">
+          <nav class="record-workspace-tabs" aria-label="Open record tabs">
+            <button
+              type="button"
+              *ngFor="let tab of recordTabs"
+              [class.active]="tab.id === activeRecordTabId"
+              [attr.data-dataset]="tab.view.dataset"
+              (click)="selectRecordTab(tab.id)">
+              <span>{{ tab.label }}</span>
+              <i
+                role="button"
+                tabindex="0"
+                aria-label="Close record tab"
+                (click)="closeRecordTab(tab.id, $event)"
+                (keydown.enter)="closeRecordTab(tab.id, $event)"
+                (keydown.space)="closeRecordTab(tab.id, $event)">x</i>
+            </button>
+          </nav>
+
+          <header class="record-form__header" *ngIf="recordView.dataset !== 'jobs' && recordView.dataset !== 'clients'">
+            <button type="button" class="back-link" (click)="closeRecordForm()">Close {{ recordView.subtitle }}</button>
+            <div>
+              <p class="eyebrow">{{ recordView.subtitle }} record</p>
+              <h2>{{ recordView.title }}</h2>
+            </div>
+          </header>
+
+          <ng-container *ngIf="recordView.dataset === 'jobs'; else genericRecordFields">
+            <div class="job-record-workspace" appArrowFieldNavigation>
+              <section class="legacy-record-window">
+                <header class="legacy-window-title">
+                  <span class="legacy-window-icon" aria-hidden="true"></span>
+                  <strong>J/C Job: {{ recordView.row['jobId'] }}-{{ recordView.row['description'] }}</strong>
+                  <button type="button" title="Close Job" aria-label="Close Job" (click)="closeRecordForm()">x</button>
+                </header>
+
+                <nav class="legacy-record-tabs" aria-label="Job record tabs">
+                  <button
+                    type="button"
+                    *ngFor="let tab of jobRecordTabs"
+                    [class.active]="activeJobRecordTab === tab.id"
+                    (click)="selectJobRecordTab(tab.id)">
+                    {{ tab.label }}
+                  </button>
+                </nav>
+
+                <div class="legacy-action-buttons" aria-label="Record actions">
+                  <p class="legacy-action-status" *ngIf="jobCommandMessage" aria-live="polite">
+                    {{ jobCommandMessage }}
+                  </p>
+                  <button
+                    type="button"
+                    *ngFor="let action of jobRecordActions"
+                    [class.primary-action]="action.primary"
+                    [disabled]="!action.enabled"
+                    [title]="action.title || action.label"
+                    (pointerdown)="handleJobRecordPointerDown(action.id, $event)"
+                    (click)="handleJobRecordAction(action.id)">
+                    {{ action.label }}
+                  </button>
+                  <span class="legacy-edit-mode-chip" *ngIf="isJobEditMode">Edit mode</span>
+                </div>
+
+                <div class="legacy-record-body">
+                  <div class="legacy-datawindow-form" *ngIf="activeJobRecordTab === 'details'">
+                    <div class="legacy-job-head">
+                      <label>
+                        <span
+                          class="legacy-field-label"
+                          [class.legacy-field-label--related]="canOpenJobRelatedField('jobId')"
+                          [attr.data-tooltip]="legacyFieldTooltip('jobId') || null"
+                          [attr.role]="canOpenJobRelatedField('jobId') ? 'button' : null"
+                          [attr.tabindex]="canOpenJobRelatedField('jobId') ? '0' : null"
+                          (click)="openJobRelatedField('jobId', $event)"
+                          (keydown.enter)="openJobRelatedField('jobId', $event)"
+                          (keydown.space)="openJobRelatedField('jobId', $event)">job</span>
+                        <input
+                          type="text"
+                          [readOnly]="!isJobHeadFieldEditable('jobId')"
+                          [class.is-editable]="isJobHeadFieldEditable('jobId')"
+                          [disabled]="isJobEditMode && !isJobHeadFieldEditable('jobId')"
+                          [value]="jobHeadEditorValue('jobId')"
+                          (input)="updateJobHeadEditField('jobId', $event)" />
+                        <span class="legacy-required-marker" *ngIf="isJobHeadFieldRequired('jobId')">*</span>
+                      </label>
+                      <label>
+                        <span
+                          class="legacy-field-label"
+                          [class.legacy-field-label--related]="canOpenJobRelatedField('activeFlag')"
+                          [attr.data-tooltip]="legacyFieldTooltip('activeFlag') || null"
+                          [attr.role]="canOpenJobRelatedField('activeFlag') ? 'button' : null"
+                          [attr.tabindex]="canOpenJobRelatedField('activeFlag') ? '0' : null"
+                          (click)="openJobRelatedField('activeFlag', $event)"
+                          (keydown.enter)="openJobRelatedField('activeFlag', $event)"
+                          (keydown.space)="openJobRelatedField('activeFlag', $event)">active?</span>
+                        <label
+                          *ngIf="isJobEditMode; else activeFlagReadonly"
+                          class="legacy-checkbox-field">
+                          <input
+                            type="checkbox"
+                            [class.is-editable]="isJobHeadFieldEditable('activeFlag')"
+                            [disabled]="!isJobHeadFieldEditable('activeFlag')"
+                            [checked]="isJobBooleanChecked('activeFlag')"
+                            (change)="updateJobBooleanField('activeFlag', $event)" />
+                          <strong>{{ isJobBooleanChecked('activeFlag') ? 'Y' : 'N' }}</strong>
+                        </label>
+                        <span class="legacy-required-marker" *ngIf="isJobHeadFieldRequired('activeFlag')">*</span>
+                        <ng-template #activeFlagReadonly>
+                          <input
+                            type="text"
+                            readOnly
+                            [value]="jobHeadEditorValue('activeFlag')" />
+                        </ng-template>
+                      </label>
+                    </div>
+
+                    <fieldset *ngFor="let section of jobFormSections" class="legacy-fieldset">
+                      <legend>{{ section.title }}</legend>
+                      <div class="legacy-section-grid" [class.single-column]="section.columns.length === 1">
+                        <div class="legacy-section-column" *ngFor="let column of section.columns">
+                          <label
+                            class="legacy-field"
+                            *ngFor="let field of column"
+                            [class.legacy-field--wide]="field.wide"
+                            [class.legacy-field--memo]="field.field === 'memo'">
+                            <span
+                              class="legacy-field-label"
+                              [class.legacy-field-label--related]="canOpenJobRelatedField(field)"
+                              [attr.data-tooltip]="legacyFieldTooltip(field) || null"
+                              [attr.role]="canOpenJobRelatedField(field) ? 'button' : null"
+                              [attr.tabindex]="canOpenJobRelatedField(field) ? '0' : null"
+                              (click)="openJobRelatedField(field, $event)"
+                              (keydown.enter)="openJobRelatedField(field, $event)"
+                              (keydown.space)="openJobRelatedField(field, $event)">{{ field.label }}</span>
+                            <a
+                              *ngIf="!isJobEditMode && isLegacyFieldLinked(field); else legacyPlainField"
+                              href="#"
+                              (click)="$event.preventDefault(); openLegacyField(field)">
+                              {{ legacyFieldValue(field) || '-' }}
+                            </a>
+                            <ng-template #legacyPlainField>
+                              <ng-container *ngIf="field.field !== 'memo'; else memoField">
+                                <label
+                                  *ngIf="isJobEditMode && isJobBooleanField(field.field); else lookupOrTextField"
+                                  class="legacy-checkbox-field">
+                                  <input
+                                    type="checkbox"
+                                    [class.is-editable]="isJobFieldEditable(field)"
+                                    [disabled]="!isJobFieldEditable(field)"
+                                    [checked]="isJobBooleanChecked(field.field)"
+                                    (change)="updateJobBooleanField(field.field, $event)" />
+                                  <strong>{{ isJobBooleanChecked(field.field) ? 'Y' : 'N' }}</strong>
+                                </label>
+                                <ng-template #lookupOrTextField>
+                                <div
+                                  *ngIf="isJobEditMode && hasJobLookupOptions(field.field); else textField"
+                                  class="legacy-lookup-combobox"
+                                  [attr.data-lookup-field]="field.field">
+                                  <input
+                                    type="text"
+                                    [class.is-editable]="isJobFieldEditable(field)"
+                                    [disabled]="!isJobFieldEditable(field)"
+                                    [value]="jobLookupInputValue(field.field, jobEditorValue(field))"
+                                    (click)="openJobLookup(field.field, $event)"
+                                    (blur)="closeJobLookupSoon(field.field)"
+                                    (keydown)="handleJobLookupKeydown(field.field, $event)"
+                                    (input)="updateJobLookupField(field.field, $event)" />
+                                  <button
+                                    type="button"
+                                    class="legacy-lookup-toggle"
+                                    [disabled]="!isJobFieldEditable(field)"
+                                    aria-label="Open lookup"
+                                    (mousedown)="toggleJobLookup(field.field, $event)"></button>
+                                  <div class="legacy-lookup-panel" *ngIf="isJobLookupOpen(field.field)">
+                                    <button
+                                      type="button"
+                                      class="legacy-lookup-option"
+                                      *ngFor="let option of filteredJobLookupOptionsFor(field.field); trackBy: trackByLookupOption"
+                                      [attr.data-lookup-value]="option.value"
+                                      (focus)="previewJobLookupOption(field.field, option)"
+                                      (click)="selectJobLookupOption(field.field, option, $event)"
+                                      (keydown.enter)="selectJobLookupOption(field.field, option, $event)"
+                                      (keydown.space)="selectJobLookupOption(field.field, option, $event)"
+                                      (mousedown)="$event.preventDefault(); selectJobLookupOption(field.field, option, $event)">
+                                      {{ lookupOptionLabel(option) || '(blank)' }}
+                                    </button>
+                                  </div>
+                                </div>
+                                <ng-template #textField>
+                                  <input
+                                    *ngIf="isJobEditMode && isJobDateField(field.field); else standardTextField"
+                                    type="date"
+                                    [class.is-editable]="isJobFieldEditable(field)"
+                                    [class.is-empty-date]="!jobDateInputValue(field)"
+                                    [disabled]="!isJobFieldEditable(field)"
+                                    [value]="jobDateInputValue(field)"
+                                    (input)="updateJobDateField(field, $event)" />
+                                  <ng-template #standardTextField>
+                                    <input
+                                      type="text"
+                                      [readOnly]="!isJobFieldEditable(field)"
+                                      [class.is-editable]="isJobFieldEditable(field)"
+                                      [disabled]="isJobEditMode && !isJobFieldEditable(field)"
+                                      [value]="jobEditorValue(field)"
+                                      (input)="updateJobEditField(field, $event)" />
+                                  </ng-template>
+                                </ng-template>
+                                </ng-template>
+                              </ng-container>
+                              <ng-template #memoField>
+                                <textarea
+                                  [readOnly]="!isJobFieldEditable(field)"
+                                  [class.is-editable]="isJobFieldEditable(field)"
+                                  [disabled]="isJobEditMode && !isJobFieldEditable(field)"
+                                  [value]="jobEditorValue(field)"
+                                  (input)="updateJobEditField(field, $event)"></textarea>
+                              </ng-template>
+                            </ng-template>
+                            <span class="legacy-required-marker" *ngIf="isJobFieldRequired(field)">*</span>
+                            <em *ngIf="!isJobEditMode && legacyFieldDescription(field)">{{ legacyFieldDescription(field) }}</em>
+                          </label>
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    <p class="record-audit" *ngIf="recordView.row['addedDateTime'] || recordView.row['addedBy']">
+                      added {{ recordView.row['addedDateTime'] || '' }} by {{ recordView.row['addedBy'] || '' }}
+                    </p>
+                  </div>
+
+                  <div class="legacy-datawindow-form" *ngIf="activeJobRecordTab === 'financial'">
+                    <fieldset *ngFor="let section of jobFinancialSections" class="legacy-fieldset">
+                      <legend>{{ section.title }}</legend>
+                      <div class="legacy-section-grid" [class.single-column]="section.columns.length === 1">
+                        <div class="legacy-section-column" *ngFor="let column of section.columns">
+                          <label class="legacy-field" *ngFor="let field of column">
+                            <span>{{ field.label }}</span>
+                            <input
+                              type="text"
+                              [readOnly]="!isJobFieldEditable(field)"
+                              [class.is-editable]="isJobFieldEditable(field)"
+                              [value]="jobEditorValue(field)"
+                              (input)="updateJobEditField(field, $event)" />
+                          </label>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <div class="legacy-tab-grid" *ngIf="activeJobRecordTab !== 'details' && activeJobRecordTab !== 'financial'">
+                    <p class="legacy-tab-status">{{ jobRecordTabStatus }}</p>
+                    <ag-grid-angular
+                      class="ag-theme-quartz legacy-tab-ag-grid"
+                      [rowData]="jobRecordTabRows"
+                      [columnDefs]="jobRecordTabColumnDefs"
+                      [defaultColDef]="defaultColDef">
+                    </ag-grid-angular>
+                  </div>
+                </div>
+              </section>
+
+              <aside class="job-insight-panel" aria-label="Job facts and suggestions">
+                <header class="job-insight-panel__header">
+                  <p class="eyebrow">Job intelligence</p>
+                  <h3>{{ jobOverview?.jobId || recordView.row['jobId'] }}</h3>
+                  <span>{{ jobOverview?.clientName || jobOverview?.client || 'No client linked' }}</span>
+                </header>
+
+                <p class="job-insight-loading" *ngIf="isJobOverviewLoading || jobOverviewMessage">
+                  {{ jobOverviewMessage }}
+                </p>
+
+                <ng-container *ngIf="jobOverview">
+                  <section class="job-insight-card">
+                    <h4>Overview</h4>
+                    <div class="job-insight-metrics">
+                      <div
+                        class="job-insight-metric"
+                        *ngFor="let metric of jobInsightMetrics"
+                        [class.good]="metric.tone === 'good'"
+                        [class.watch]="metric.tone === 'watch'"
+                        [class.alert]="metric.tone === 'alert'">
+                        <span>{{ metric.label }}</span>
+                        <strong>{{ metric.value }}</strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="job-insight-card">
+                    <h4>Watchlist</h4>
+                    <ul class="job-insight-list">
+                      <li *ngFor="let item of jobWatchlist">{{ item }}</li>
+                    </ul>
+                  </section>
+
+                  <section class="job-insight-card">
+                    <h4>Suggested actions</h4>
+                    <button
+                      type="button"
+                      class="job-insight-action"
+                      *ngFor="let action of jobSuggestedActions"
+                      [disabled]="action.disabled"
+                      (click)="openJobInsightAction(action)">
+                      <strong>{{ action.label }}</strong>
+                      <span>{{ action.detail }}</span>
+                    </button>
+                  </section>
+
+                  <section class="job-insight-card job-insight-card--ai">
+                    <h4>Training tip</h4>
+                    <p>
+                      Job Costing training describes the job as the control point for budgets, commitments,
+                      actual costs, forecasts, variance, and drill-down reporting. This panel can later ask AI
+                      to explain these facts in plain language using the legacy training KB.
+                    </p>
+                  </section>
+                </ng-container>
+              </aside>
+            </div>
+          </ng-container>
+
+          <ng-template #clientRecordForm>
+            <div class="client-record-workspace" appArrowFieldNavigation>
+              <section class="legacy-record-window legacy-record-window--client">
+                <header class="legacy-window-title">
+                  <span class="legacy-window-icon legacy-window-icon--client" aria-hidden="true"></span>
+                  <strong>A/R Client: {{ recordView.row['clientId'] }}-{{ recordView.row['name'] }}</strong>
+                  <button type="button" title="Close Client" aria-label="Close Client" (click)="closeRecordForm()">x</button>
+                </header>
+
+                <nav class="legacy-record-tabs" aria-label="Client record tabs">
+                  <button type="button" class="active">Details</button>
+                </nav>
+
+                <div class="legacy-action-buttons" aria-label="Client record actions">
+                  <p class="legacy-action-status" *ngIf="clientCommandMessage" aria-live="polite">
+                    {{ clientCommandMessage }}
+                  </p>
+                  <button
+                    type="button"
+                    *ngFor="let action of clientRecordActions"
+                    [class.primary-action]="action.primary"
+                    [disabled]="!action.enabled"
+                    [title]="action.title || action.label"
+                    (pointerdown)="handleClientRecordPointerDown(action.id, $event)"
+                    (click)="handleClientRecordAction(action.id)">
+                    {{ action.label }}
+                  </button>
+                  <span class="legacy-edit-mode-chip" *ngIf="isClientEditMode">Edit mode</span>
+                </div>
+
+                <div class="legacy-record-body">
+                  <div class="legacy-datawindow-form">
+                    <fieldset *ngFor="let section of clientFormSections" class="legacy-fieldset">
+                      <legend>{{ section.title }}</legend>
+                      <div class="legacy-section-grid" [class.single-column]="section.columns.length === 1">
+                        <div class="legacy-section-column" *ngFor="let column of section.columns">
+                          <label class="legacy-field" *ngFor="let field of column">
+                            <span class="legacy-field-label">{{ field.label }}</span>
+                            <label
+                              *ngIf="isClientEditMode && isClientBooleanField(field.field); else clientTextField"
+                              class="legacy-checkbox-field">
+                              <input
+                                type="checkbox"
+                                [class.is-editable]="isClientFieldEditable(field)"
+                                [disabled]="!isClientFieldEditable(field)"
+                                [checked]="isClientBooleanChecked(field.field)"
+                                (change)="updateClientBooleanField(field.field, $event)" />
+                              <strong>{{ isClientBooleanChecked(field.field) ? 'Y' : 'N' }}</strong>
+                            </label>
+                            <ng-template #clientTextField>
+                              <input
+                                type="text"
+                                [readOnly]="!isClientFieldEditable(field)"
+                                [class.is-editable]="isClientFieldEditable(field)"
+                                [disabled]="isClientEditMode && !isClientFieldEditable(field)"
+                                [value]="clientEditorValue(field)"
+                                (input)="updateClientEditField(field, $event)" />
+                            </ng-template>
+                            <span class="legacy-required-marker" *ngIf="isClientFieldRequired(field)">*</span>
+                          </label>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </ng-template>
+
+          <ng-template #genericRecordFields>
+            <ng-container *ngIf="recordView.dataset === 'clients'; else genericRecordGrid">
+              <ng-container *ngTemplateOutlet="clientRecordForm"></ng-container>
+            </ng-container>
+            <ng-template #genericRecordGrid>
+              <section class="record-fields">
+                <div class="record-field" *ngFor="let field of recordView.fields">
+                  <span>{{ field.label }}</span>
+                  <a *ngIf="isRecordFieldLinked(field); else plainField" href="#" (click)="$event.preventDefault(); openRecordField(field)">
+                    {{ field.displayValue || '-' }}
+                  </a>
+                  <ng-template #plainField>
+                    <strong>{{ field.displayValue || '-' }}</strong>
+                  </ng-template>
+                </div>
+              </section>
+            </ng-template>
+          </ng-template>
+        </article>
+      </ng-template>
+    </section>
+  </section>
+</main>

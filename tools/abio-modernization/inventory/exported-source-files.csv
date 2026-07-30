@@ -1,0 +1,7 @@
+"File","Path","Extension","ObjectType","SizeBytes","LastWriteTime","HasPbExportHeader","SqlStatementCount","DataWindowCount","RetrieveCount","MessageBoxCount"
+"d_ar_billing_daysheet_summary_issl.srd","E:\Abio\d_ar_billing_daysheet_summary_issl.srd",".srd","datawindow","359684","2026-03-18T23:04:54","True","1","1","1","0"
+"d_report_ut_pr_cheques_union_remit.srd","E:\Abio\d_report_ut_pr_cheques_union_remit.srd",".srd","datawindow","19333","2026-03-22T03:42:12","False","1","1","1","0"
+"d_report_ut_pr_cheques_union_remit_v2.srd","E:\Abio\d_report_ut_pr_cheques_union_remit_v2.srd",".srd","datawindow","19473","2026-03-22T04:03:04","False","1","1","1","0"
+"d_rhumbix_import_errors.srd","E:\Abio\d_rhumbix_import_errors.srd",".srd","datawindow","10660","2026-02-06T04:56:52","False","1","1","1","0"
+"d_rhumbix_sync_history.srd","E:\Abio\d_rhumbix_sync_history.srd",".srd","datawindow","7281","2026-01-31T19:43:36","True","1","1","1","0"
+"w_rhumbix_integration.srw","E:\Abio\w_rhumbix_integration.srw",".srw","window","27479","2026-01-31T19:38:00","True","11","0","0","9"

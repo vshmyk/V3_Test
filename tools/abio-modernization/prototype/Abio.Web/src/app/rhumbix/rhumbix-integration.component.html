@@ -1,0 +1,116 @@
+<main class="rhumbix-page">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Abio modernization pilot</p>
+      <h1>Rhumbix Integration</h1>
+    </div>
+    <div class="status-pill">{{ statusMessage }}</div>
+  </header>
+
+  <section class="workspace">
+    <form class="panel filters" [formGroup]="form">
+      <div class="panel-header">
+        <div>
+          <h2>Import Timesheets</h2>
+          <p>Run the Rhumbix import for a selected book and payroll period.</p>
+        </div>
+      </div>
+
+      <label>
+        <span>Book</span>
+        <select formControlName="book" (change)="refreshReadModels()">
+          <option *ngFor="let book of allowedBooks" [value]="book">{{ book }}</option>
+        </select>
+      </label>
+
+      <div class="date-grid">
+        <label>
+          <span>Start date</span>
+          <input type="date" formControlName="startDate">
+        </label>
+        <label>
+          <span>End date</span>
+          <input type="date" formControlName="endDate">
+        </label>
+      </div>
+
+      <label>
+        <span>PR period</span>
+        <input type="number" formControlName="prPeriod">
+      </label>
+
+      <div class="shortcut-row">
+        <button type="button" (click)="setToday()">Today</button>
+        <button type="button" (click)="setThisWeek()">This Week</button>
+        <button type="button" (click)="setLastWeek()">Last Week</button>
+      </div>
+
+      <p class="validation" *ngIf="!dateRangeIsValid()">End date must be greater than or equal to start date.</p>
+
+      <button class="primary-action" type="button" [disabled]="isLoading" (click)="importTimesheets()">
+        Import Timesheets
+      </button>
+    </form>
+
+    <aside class="panel sync-panel" [formGroup]="form">
+      <div class="panel-header">
+        <div>
+          <h2>Project Sync</h2>
+          <p>Push pending projects and cost codes to Rhumbix.</p>
+        </div>
+      </div>
+
+      <div class="metric">
+        <span>Pending projects</span>
+        <strong>{{ pendingProjectCount }}</strong>
+      </div>
+
+      <label class="check-row">
+        <input type="checkbox" formControlName="forceFullSync">
+        <span>Force full sync</span>
+      </label>
+
+      <button class="secondary-action" type="button" [disabled]="isLoading" (click)="syncProjects()">
+        Sync Projects Now
+      </button>
+
+      <div class="result-stack">
+        <div>
+          <span>Imported</span>
+          <strong>{{ lastImportResult?.importedCount ?? 0 }}</strong>
+        </div>
+        <div>
+          <span>Errors</span>
+          <strong>{{ lastImportResult?.errorCount ?? importErrors.length }}</strong>
+        </div>
+        <div>
+          <span>Total from Rhumbix</span>
+          <strong>{{ lastImportResult?.totalFromRhumbix ?? 0 }}</strong>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="panel grid-panel">
+    <div class="tabbar">
+      <button type="button" [class.active]="activeTab === 'history'" (click)="activeTab = 'history'">Sync History</button>
+      <button type="button" [class.active]="activeTab === 'errors'" (click)="activeTab = 'errors'">Import Errors</button>
+    </div>
+
+    <ag-grid-angular
+      *ngIf="activeTab === 'history'"
+      class="ag-theme-quartz grid"
+      [rowData]="syncHistory"
+      [columnDefs]="syncColumnDefs"
+      [defaultColDef]="defaultColDef">
+    </ag-grid-angular>
+
+    <ag-grid-angular
+      *ngIf="activeTab === 'errors'"
+      class="ag-theme-quartz grid"
+      [rowData]="importErrors"
+      [columnDefs]="errorColumnDefs"
+      [defaultColDef]="defaultColDef">
+    </ag-grid-angular>
+  </section>
+</main>

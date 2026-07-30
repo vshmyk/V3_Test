@@ -1,0 +1,34 @@
+﻿$PBExportHeader$d_report_ds_jc_commitment_sum1.srd
+release 9;
+datawindow(units=0 timer_interval=0 color=67108864 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes hidegrayline=no grid.lines=0 )
+header(height=80 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=92 color="536870912" )
+table(column=(type=decimal(2) updatewhereclause=yes name=camtl dbname="camtl" )
+ column=(type=decimal(2) updatewhereclause=yes name=camtm dbname="camtm" )
+ column=(type=decimal(2) updatewhereclause=yes name=camte dbname="camte" )
+ column=(type=decimal(2) updatewhereclause=yes name=camts dbname="camts" )
+ retrieve="  SELECT Sum(centre.lab_commit_cost) AS camtl,   
+         Sum(centre.mtl_commit_cost) AS camtm,   
+         Sum(centre.equ_commit_cost) AS camte,   
+         Sum(centre.sub_commit_cost) AS camts
+    FROM centre  
+   WHERE centre.book = :as_book AND 
+         centre.job = :as_job AND  
+         centre.area BETWEEN :as_from_area AND :as_to_area AND  
+         centre.centre BETWEEN :as_from_centre AND :as_to_centre
+" arguments=(("as_book", string),("as_job", string),("as_from_area", string),("as_to_area", string),("as_from_centre", string),("as_to_centre", string)) )
+text(band=header alignment="0" text="Camtl" border="0" color="33554432" x="9" y="4" height="76" width="567" html.valueishtml="0"  name=camtl_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Camtm" border="0" color="33554432" x="585" y="4" height="76" width="567" html.valueishtml="0"  name=camtm_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Camte" border="0" color="33554432" x="1161" y="4" height="76" width="567" html.valueishtml="0"  name=camte_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+text(band=header alignment="0" text="Camts" border="0" color="33554432" x="1737" y="4" height="76" width="567" html.valueishtml="0"  name=camts_t visible="1"  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="9" y="0" height="76" width="567" format="[general]" html.valueishtml="0"  name=camtl visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=2 alignment="0" tabsequence=32766 border="0" color="33554432" x="585" y="0" height="76" width="567" format="[general]" html.valueishtml="0"  name=camtm visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=3 alignment="0" tabsequence=32766 border="0" color="33554432" x="1161" y="0" height="76" width="567" format="[general]" html.valueishtml="0"  name=camte visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=4 alignment="0" tabsequence=32766 border="0" color="33554432" x="1737" y="0" height="76" width="567" format="[general]" html.valueishtml="0"  name=camts visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no edit.imemode=0  font.face="Arial" font.height="-12" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" )
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )

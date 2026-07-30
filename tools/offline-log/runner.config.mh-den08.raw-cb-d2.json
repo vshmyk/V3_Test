@@ -1,0 +1,63 @@
+{
+  "service": {
+    "name": "AOTransact-MH-DEN08-Raw-CB-D2",
+    "interval_minutes": 15,
+    "loop": false,
+    "max_cycle_minutes": 30
+  },
+  "paths": {
+    "output_dir": "..\\..\\output\\mh-den08-raw-cb-d2",
+    "state_path": "..\\..\\output\\mh-den08-raw-cb-d2\\service\\last-offset.json",
+    "metadata_snapshot_path": "..\\..\\output\\chsc_metadata.snapshot.json",
+    "lock_file_path": "..\\..\\output\\mh-den08-raw-cb-d2\\service\\aotransact.lock",
+    "health_file_path": "..\\..\\output\\mh-den08-raw-cb-d2\\service\\last-run.json",
+    "log_dir": "..\\..\\output\\mh-den08-raw-cb-d2\\service\\logs",
+    "archive_dir": "..\\..\\output\\mh-den08-raw-cb-d2\\service\\archive",
+    "archive_after_hours": 24,
+    "delete_original_after_archive": false
+  },
+  "pipeline": {
+    "source_drive": "E:",
+    "snapshot_data_path": "",
+    "ldf_name": "MH-DEN08_log.ldf",
+    "direct_ldf_path": "E:\\log\\MH-DEN08_log.ldf",
+    "live_server_instance": ".\\SQLEXPRESS",
+    "live_database": "OASIS_FLUX",
+    "client_id": "MH-DEN08",
+    "environment": "prod",
+    "sql_version_hint": "16.0.1150.1",
+    "tables": [],
+    "users": [],
+    "exclude_users": [],
+    "spids": [],
+    "window_minutes": 15,
+    "bootstrap_first_run": false,
+    "raw_match_mode": "skip",
+    "read_mode": "raw_offline_exploration",
+    "offline_tail_bytes": 536870912,
+    "offline_probe_tail_bytes": 134217728,
+    "offline_auto_probe_profile": true,
+    "offline_record_capture_bytes": 192,
+    "offline_diag_top_tokens": 100,
+    "offline_diag_sample_limit": 300,
+    "offline_log_only": true,
+    "raw_explore_actions": [ "INSERT", "UPDATE", "DELETE", "COMMIT" ],
+    "raw_explore_db_markers": [ "0xCB", "0xD2", "0x7D" ],
+    "semantic_event_kinds": [],
+    "apply_to_target": false,
+    "use_compiled_converter": true,
+    "skip_shadow_cleanup": true,
+    "skip_lsn_head_precheck": true,
+    "start_lsn": null,
+    "update_mode": "adaptive",
+    "apply_target_server_instance": ".\\SQLEXPRESS",
+    "apply_target_database": "OASIS_FLUX",
+    "apply_stop_on_error": true,
+    "apply_wrap_in_transaction": false,
+    "compiled_converter_path": ".\\fast-quote-convert\\bin\\Release\\net8.0\\fast-quote-convert.exe",
+    "trn_output_path_template": "..\\..\\output\\mh-den08-raw-cb-d2\\mh-den08.trn"
+  },
+  "security": {
+    "use_sql_auth": false
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "generatedAt": "2026-07-05",
+  "source": {
+    "site": "https://abiosystems.ca",
+    "captureMethod": "Public SPA route/content extraction from deployed website bundle",
+    "usage": "Paraphrased product/domain grounding for Abio NG replatforming and future AI assistant retrieval",
+    "authorityLimit": "Use PowerBuilder source, SQL schema, stored procedures, and approved requirements for exact behavior."
+  },
+  "records": [
+    {
+      "id": "site-home",
+      "title": "Construction Accounting Software",
+      "route": "/",
+      "sourceUrl": "https://abiosystems.ca/",
+      "modules": ["platform", "construction-erp", "job-costing", "documents", "analytics"],
+      "entities": ["job", "financial metric", "document", "dashboard"],
+      "workflows": ["integrated construction accounting", "real-time decision support", "related-record drill-down"],
+      "keywords": ["construction accounting", "integrated ERP", "real time data", "job cost", "visibility", "single platform"],
+      "summary": "Abio presents itself as an integrated construction accounting platform that reduces spreadsheets and double entry while giving users real-time business and job-cost visibility.",
+      "replatformingImplications": [
+        "Design Abio NG around integrated workflows rather than isolated accounting screens.",
+        "Make job, transaction, document, and dashboard drill-downs first-class navigation patterns.",
+        "Use this source for business vocabulary, not exact validation or posting rules."
+      ]
+    },
+    {
+      "id": "about-abio",
+      "title": "About Abio",
+      "route": "/about-abio",
+      "sourceUrl": "https://abiosystems.ca/about-abio",
+      "modules": ["company-context", "platform"],
+      "entities": ["customer", "construction company", "project"],
+      "workflows": ["customer onboarding", "scalable implementation"],
+      "keywords": ["industrial construction", "30 years", "long term", "private business", "scalable"],
+      "summary": "Abio emphasizes long construction-industry experience, customer continuity, scalable implementation, and a commitment to supporting customers over the long term.",
+      "replatformingImplications": [
+        "Prefer modernization choices that protect customer continuity and gradual migration.",
+        "Avoid throwing away legacy workflows until equivalent NG workflows are verified."
+      ]
+    },
+    {
+      "id": "construction-finance",
+      "title": "Construction Finance",
+      "route": "/construction-finance",
+      "sourceUrl": "https://abiosystems.ca/construction-finance",
+      "modules": ["general-ledger", "finance", "budgeting", "analytics"],
+      "entities": ["company", "division", "profit center", "general ledger account", "budget", "journal entry", "subledger"],
+      "workflows": ["financial enquiry", "budget setup", "journal automation", "subledger drill-down", "audit review"],
+      "keywords": ["financial statements", "consolidation", "division", "budget", "GL", "audit trail", "dashboard"],
+      "summary": "Construction Finance centers on company/division financial visibility, budgets, GL control, automated journal support, audit trails, and drill-down to related subledgers/documents.",
+      "replatformingImplications": [
+        "Preserve book/company/division/profit-center dimensions in API contracts.",
+        "Keep GL updates and journal automation in server-side command services.",
+        "Financial grids should drill down to subledgers and documents."
+      ]
+    },
+    {
+      "id": "job-costing",
+      "title": "Job Costing",
+      "route": "/job-costing",
+      "sourceUrl": "https://abiosystems.ca/job-costing",
+      "modules": ["job-costing", "analytics", "project-management"],
+      "entities": ["job", "job cost transaction", "budget", "commitment", "variance order", "cost centre", "area"],
+      "workflows": ["job cost enquiry", "budget versus actual review", "variance tracking", "saved analytics view"],
+      "keywords": ["job cost", "budget", "actual cost", "variance", "risk", "real time", "custom view"],
+      "summary": "Job Costing is positioned as the core visibility layer for project health, using real-time costs, budgets, variances, saved views, and analytics to help users identify risk early.",
+      "replatformingImplications": [
+        "Treat Job as a central hub record with deep links to AP, AR, timesheets, POs, documents, and JC transactions.",
+        "AG Grid job-cost views should support saved layouts, filtering, grouping, and drill-down.",
+        "Job edit/save behavior must remain backed by migrated PowerBuilder program-layer logic."
+      ]
+    },
+    {
+      "id": "construction-accounts-payable",
+      "title": "Construction Accounts Payable",
+      "route": "/construction-accounts-payable",
+      "sourceUrl": "https://abiosystems.ca/construction-accounts-payable",
+      "modules": ["accounts-payable", "purchase-orders", "documents", "job-costing"],
+      "entities": ["vendor", "AP invoice", "AP invoice item", "purchase order", "requisition", "payment", "holdback", "insurance certificate", "document"],
+      "workflows": ["invoice entry", "invoice approval", "PO matching", "payment issue", "document attachment", "expense enquiry"],
+      "keywords": ["AP", "supplier", "subcontractor", "retention", "holdback", "OCR", "invoice scanning", "approval", "committed cost"],
+      "summary": "AP focuses on controlling construction expenses, supplier/subcontractor payments, PO integration, document links, invoice scanning/OCR, batch approval, and real-time expense enquiries.",
+      "replatformingImplications": [
+        "Model AP invoice entry, approval, PO matching, and payment as explicit server-side workflows.",
+        "Expose linked documents directly from AP transaction screens.",
+        "Preserve vendor defaults and streamlined entry behavior from legacy code."
+      ]
+    },
+    {
+      "id": "construction-invoicing",
+      "title": "Construction Invoicing",
+      "route": "/construction-invoicing",
+      "sourceUrl": "https://abiosystems.ca/construction-invoicing",
+      "modules": ["accounts-receivable", "invoicing", "job-costing", "documents"],
+      "entities": ["client", "AR invoice", "AR invoice item", "claim", "payment", "retention", "LEMS package", "client approval"],
+      "workflows": ["invoice generation", "claim generation", "progress billing", "T&M billing", "payment posting", "billing support package"],
+      "keywords": ["AR", "invoice", "claims", "receivables", "LEMS", "T&M", "retention", "progress billing", "cash flow"],
+      "summary": "Invoicing covers receivables, claims, progress billing, T&M support, retention, payment tracking, LEMS backup, tax calculation, and posting effects across AR, GL, equipment, jobs, and customers.",
+      "replatformingImplications": [
+        "Invoice generation should be implemented as a command workflow with posting and audit rules.",
+        "AR screens should link to LEMS, documents, job, equipment, payments, and client approvals.",
+        "Dispute support requires easy access to invoice backup and approval artifacts."
+      ]
+    },
+    {
+      "id": "subcontractors-purchase-orders",
+      "title": "Subcontractors & Purchase Orders",
+      "route": "/subcontractors-purchase-orders",
+      "sourceUrl": "https://abiosystems.ca/subcontractors-purchase-orders",
+      "modules": ["subcontractors", "purchase-orders", "accounts-payable", "job-costing", "documents"],
+      "entities": ["subcontractor", "contract", "purchase order", "PO line", "requisition", "commitment", "variance order", "insurance", "approval"],
+      "workflows": ["subcontractor management", "PO approval", "PO invoice matching", "committed cost update", "insurance expiry tracking"],
+      "keywords": ["subcontractor", "PO", "requisition", "contract", "insurance", "commitment", "progress payment", "variance order", "approval"],
+      "summary": "This area organizes subcontractor data, contracts, requisitions, purchase orders, insurance, invoices, holdback, progress payments, taxes, variance orders, approvals, and committed costs.",
+      "replatformingImplications": [
+        "PO and subcontract workflows must update committed costs consistently.",
+        "Search should support PO number, inventory item, vendor/subcontractor, and business-specific queries.",
+        "Insurance and document expiry tracking should be visible from subcontractor/project contexts."
+      ]
+    },
+    {
+      "id": "mobile-timesheet-software",
+      "title": "Mobile Timesheet Software",
+      "route": "/mobile-timesheet-software",
+      "sourceUrl": "https://abiosystems.ca/mobile-timesheet-software",
+      "modules": ["timesheets", "payroll", "job-costing", "invoicing", "field-operations"],
+      "entities": ["timesheet", "timesheet item", "employee", "crew", "supervisor", "labour type", "approval status", "LEMS approval"],
+      "workflows": ["field time entry", "supervisor approval", "time rejection", "payroll integration", "job-cost update", "LEMS sign-off"],
+      "keywords": ["mobile time", "timesheet", "supervisor", "approval", "rejected time", "payroll", "LEMS", "labour cost"],
+      "summary": "Timesheets are framed as mobile field entry with supervisor review, rejection correction, payroll integration, job-cost updates, client approval, and invoice support.",
+      "replatformingImplications": [
+        "Timesheet approval/rejection should be modeled as explicit state transitions.",
+        "Do not embed payroll or job-cost side effects in Angular; use server-side commands.",
+        "Mobile-friendly UI and fast correction workflows are important for adoption."
+      ]
+    },
+    {
+      "id": "canadian-payroll",
+      "title": "Canadian Payroll",
+      "route": "/canadian-payroll",
+      "sourceUrl": "https://abiosystems.ca/canadian-payroll",
+      "modules": ["payroll", "human-resources", "accounts-payable", "general-ledger"],
+      "entities": ["employee", "payroll run", "union", "earnings type", "deduction", "remittance", "T4", "ROE", "expense", "garnishment"],
+      "workflows": ["union payroll", "CRA reporting", "union remittance", "year-end processing", "earnings calculation"],
+      "keywords": ["Canadian payroll", "union", "CRA", "T4", "ROE", "remittance", "deduction", "overtime", "travel allowance"],
+      "summary": "Payroll emphasizes Canadian and unionized labour requirements, complex earnings and deductions, CRA/union compliance, AP integration for expenses/garnishments, and year-end processing.",
+      "replatformingImplications": [
+        "Payroll calculation logic is high risk and must be migrated from authoritative legacy/database rules.",
+        "Union and remittance behavior should be represented as server-side, versioned business logic.",
+        "AI help can explain payroll concepts, but must not invent calculation rules."
+      ]
+    },
+    {
+      "id": "reporting-analytics",
+      "title": "Reporting & Analytics",
+      "route": "/reporting-analytics",
+      "sourceUrl": "https://abiosystems.ca/reporting-analytics",
+      "modules": ["reporting", "analytics", "dashboards"],
+      "entities": ["report definition", "dashboard", "dashboard widget", "saved view", "filter", "drill-down action"],
+      "workflows": ["dashboard review", "custom report setup", "filtering", "drill-down analysis"],
+      "keywords": ["reporting", "analytics", "dashboard", "filter", "customize", "real time", "drill down"],
+      "summary": "Reporting and analytics focus on configurable reports, dashboard metrics, real-time updates, visual summaries, filters, and drill-down into important details.",
+      "replatformingImplications": [
+        "Saved AG Grid layouts and report definitions should be persisted server-side.",
+        "Dashboards should link to source records instead of presenting isolated charts.",
+        "Report filters should be reusable by AI-assisted search and navigation."
+      ]
+    },
+    {
+      "id": "document-management-for-construction",
+      "title": "Document Management for Construction",
+      "route": "/document-management-for-construction",
+      "sourceUrl": "https://abiosystems.ca/document-management-for-construction",
+      "modules": ["documents", "workflow", "security", "accounts-payable", "accounts-receivable", "job-costing"],
+      "entities": ["document", "document version", "document tag", "attachment link", "approval route", "permission", "audit trail"],
+      "workflows": ["document upload", "document indexing", "document approval", "revision tracking", "related-record document drill-down"],
+      "keywords": ["document management", "indexing", "tagging", "permission", "revision", "audit trail", "approval", "viewer"],
+      "summary": "Document management provides secure storage, indexing, tagging, viewer access, permissions, backups, revision history, audit trail, approval routing, and links to business records.",
+      "replatformingImplications": [
+        "Implement documents as a shared platform service across modules.",
+        "Use attachment links so documents can be opened from jobs, invoices, POs, requisitions, payments, and reports.",
+        "Permissions and audit trail must be enforced on the server."
+      ]
+    },
+    {
+      "id": "cloud-based-accounting-software",
+      "title": "Cloud Based Accounting Software",
+      "route": "/cloud-based-accounting-software",
+      "sourceUrl": "https://abiosystems.ca/cloud-based-accounting-software",
+      "modules": ["platform", "cloud", "security", "mobile-access"],
+      "entities": ["authorized user", "tenant", "book", "data store", "backup"],
+      "workflows": ["browser access", "remote work", "backup", "upgrade", "scaling"],
+      "keywords": ["cloud", "remote access", "tablet", "backup", "upgrade", "authorized user", "scale"],
+      "summary": "Cloud positioning emphasizes browser/tablet access, remote work, managed hosting, backups, upgrades, reduced IT overhead, and scalable data usage.",
+      "replatformingImplications": [
+        "Design Abio NG around browser-first delivery and centralized service hosting.",
+        "Authentication, authorization, tenant/book scoping, backups, and uptime are platform concerns.",
+        "Mobile-responsive layouts matter for field workflows."
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "title": "Privacy Policy",
+      "route": "/privacy-policy",
+      "sourceUrl": "https://abiosystems.ca/privacy-policy",
+      "modules": ["privacy", "compliance"],
+      "entities": ["personal information", "contact information", "billing information", "network information"],
+      "workflows": ["privacy request", "correction request", "payment processing"],
+      "keywords": ["privacy", "personal information", "contact", "billing", "correction", "marketing"],
+      "summary": "The privacy page identifies categories of personal information collected for communication and payment processing, and describes access/correction request handling.",
+      "replatformingImplications": [
+        "AI and logging features should avoid exposing personal/contact/billing data unnecessarily.",
+        "Future AI assistant design should account for privacy, access control, and auditability."
+      ]
+    }
+  ],
+  "crossModuleFlows": [
+    {
+      "id": "field-time-to-payroll-job-cost-billing",
+      "modules": ["timesheets", "payroll", "job-costing", "invoicing"],
+      "steps": ["enter field time", "approve or reject time", "update payroll", "update job cost", "support LEMS/client billing"],
+      "designNote": "Represent approvals and downstream updates as server-side business commands."
+    },
+    {
+      "id": "po-to-ap-and-committed-cost",
+      "modules": ["purchase-orders", "accounts-payable", "job-costing", "documents"],
+      "steps": ["create requisition/PO", "approve PO", "increase commitment", "match invoice to PO line", "update AP/job cost/documents"],
+      "designNote": "Committed-cost updates must be transactional and auditable."
+    },
+    {
+      "id": "document-backed-transaction-review",
+      "modules": ["documents", "accounts-payable", "accounts-receivable", "purchase-orders", "job-costing"],
+      "steps": ["enter or import transaction", "attach/index documents", "route approval if needed", "open documents from related records", "preserve audit/revision history"],
+      "designNote": "Documents should be a shared service with related-record links and permission checks."
+    }
+  ],
+  "aiAssistantGuidance": {
+    "goodUses": [
+      "Explain modules in business language",
+      "Map user questions to likely screens or workflows",
+      "Suggest related records to inspect",
+      "Expand construction ERP terminology",
+      "Help onboard users to Abio NG concepts"
+    ],
+    "doNotUseFor": [
+      "Posting rules",
+      "Payroll calculations",
+      "Security permissions",
+      "Save/update validation",
+      "Financial statement calculations",
+      "Legal or compliance advice"
+    ]
+  }
+}

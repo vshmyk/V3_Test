@@ -1,0 +1,55 @@
+{
+  "service": {
+    "name": "AOTransact",
+    "interval_minutes": 15,
+    "loop": false,
+    "max_cycle_minutes": 12,
+    "allow_start_lsn_retry_without_bound": false
+  },
+  "paths": {
+    "output_dir": ".\\output",
+    "state_path": ".\\output\\service\\last-offset.json",
+    "metadata_snapshot_path": ".\\output\\chsc_metadata_flux.snapshot.json",
+    "lock_file_path": ".\\output\\service\\aotransact.lock",
+    "health_file_path": ".\\output\\service\\last-run.json",
+    "log_dir": ".\\output\\service\\logs",
+    "archive_dir": ".\\output\\service\\archive",
+    "archive_after_hours": 24,
+    "delete_original_after_archive": false
+  },
+  "pipeline": {
+    "source_drive": "E:",
+    "snapshot_data_path": "AOexpress",
+    "ldf_name": "OASIS_FLUX_log.ldf",
+    "live_server_instance": "LOCALHOST\\SQLEXPRESS",
+    "live_database": "OASIS_FLUX",
+    "log_reader_function": "fn_dblog",
+    "metadata_server_instance": "LOCALHOST\\SQLEXPRESS",
+    "metadata_database": "OASIS_FLUX",
+    "tables": [
+      "oasis.CHSC_PO",
+      "oasis.CHSC_POLINE",
+      "oasis.CHSC_POLINE_HISTORY",
+      "oasis.CHSC_PROJECT",
+      "oasis.CHSC_QUOTELINE",
+      "oasis.CHSC_QUOTE"
+    ],
+    "users": [],
+    "exclude_users": [],
+    "spids": [],
+    "window_minutes": 15,
+    "bootstrap_first_run": true,
+    "raw_match_mode": "skip",
+    "apply_to_target": false,
+    "generate_undo": false,
+    "export_before_after": false,
+    "export_row_history": false,
+    "use_compiled_converter": true,
+    "compiled_converter_fallback_to_ps": false
+  },
+  "security": {
+    "use_sql_auth": false,
+    "sql_user": "",
+    "sql_password": ""
+  }
+}

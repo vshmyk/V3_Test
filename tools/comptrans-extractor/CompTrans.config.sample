@@ -1,0 +1,43 @@
+; Generic Sybase transaction extractor configuration
+; Copy to CompTrans.config next to the executable and customize per client.
+
+BACKUP_DIR=C:\Client\Data\Bak
+STATE_FILE=C:\Client\Logs\state.out
+TRANSACTION_BACKUP_FILE=C:\Client\Data\backup.trn
+TRANSACTION_CURRENT_FILE=C:\Client\Data\current.trn
+TRANSACTION_FINAL_FILE=C:\Client\Data\flux.trn
+TEMP_TRANSACTION_FILE=C:\Client\Data\temp.trn
+WORK_DIR=C:\Client\Data
+ARCHIVE_DIR=C:\Client\Data\Logs
+ARCHIVE_RETENTION_DAYS=5
+FINAL_FILE_MODE=CurrentOnly
+INITIAL_OFFSET=00000000000001
+DELETE_TRN_FILES_AFTER_RUN=true
+DELETE_FILE_PATTERNS=*.trn
+FTP_DEBUG_LOG=
+FTP_SKIP_CERT_VALIDATION_FOR_DEBUG=false
+TABLE_LIST=oasis.CHSC_USERS
+STATE_TABLE_LIST=oasis.CHSC_USERS
+DBTRAN_PATH=C:\Program Files\SQL Anywhere 17\Bin64\dbtran.exe
+DBTRAN_QUIET=true
+SOURCE_DRIVE=C:
+SOURCE_LOG_RELATIVE_PATH=OASIS\oasis.log
+PREDELETE_BACKUP_DIR=true
+PREDELETE_ALL_SHADOWS=false
+DELETE_OLDEST_SHADOW_AFTER_RUN=false
+
+UPLOAD_TARGETS=Primary
+UPLOAD_TARGET.Primary.ENABLED=true
+UPLOAD_TARGET.Primary.PROTOCOL=SFTP
+UPLOAD_TARGET.Primary.HOST=sftp.example.contoso.com
+UPLOAD_TARGET.Primary.PORT=22
+UPLOAD_TARGET.Primary.USER=client-user
+UPLOAD_TARGET.Primary.REMOTE_DIR=Logs
+UPLOAD_TARGET.Primary.PASSWORD_SCOPE=CurrentUser
+UPLOAD_TARGET.Primary.PASSWORD_ENCRYPTED=
+
+; For FTPS instead of SFTP, use:
+; UPLOAD_TARGET.Primary.PROTOCOL=FTPS
+; UPLOAD_TARGET.Primary.PORT=21
+; UPLOAD_TARGET.Primary.ENABLE_SSL=true
+; UPLOAD_TARGET.Primary.USE_PASSIVE=true

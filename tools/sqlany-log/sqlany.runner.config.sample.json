@@ -1,0 +1,28 @@
+{
+  "tools": {
+    "dbtranPath": "E:\\ASE\\Bin64\\dbtran.exe"
+  },
+  "source": {
+    "logPath": "E:\\DATA\\MACSII\\oasis.log",
+    "encryptionKey": null
+  },
+  "filters": {
+    "tables": [
+      "oasis.CHSC_PROJECT_ATTACHMENTS",
+      "oasis.CHSC_SQL_SEQUENCE"
+    ],
+    "includeUsers": [],
+    "excludeUsers": [],
+    "includeRollbacks": false,
+    "chronological": true,
+    "ansiSql": false,
+    "fromMostRecentCheckpoint": false
+  },
+  "output": {
+    "sqlOutputPath": "C:\\Temp\\sqlany_oasis.filtered.sql",
+    "logOutputPath": "C:\\Temp\\sqlany_oasis.filtered.dbtran.log",
+    "resultJsonPath": "C:\\Temp\\sqlany_oasis.filtered.result.json",
+    "normalizedJsonPath": "C:\\Temp\\sqlany_oasis.filtered.normalized.json",
+    "trnOutputPath": "C:\\Temp\\sqlany_oasis.filtered.trn"
+  }
+}

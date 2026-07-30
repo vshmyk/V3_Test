@@ -1,0 +1,63 @@
+{
+  "service": {
+    "name": "AOTransact",
+    "interval_minutes": 15,
+    "loop": false,
+    "max_cycle_minutes": 12
+  },
+  "paths": {
+    "output_dir": ".\\output",
+    "state_path": ".\\output\\service\\last-offset.json",
+    "metadata_snapshot_path": ".\\output\\chsc_metadata_flux.snapshot.json",
+    "lock_file_path": ".\\output\\service\\aotransact.lock",
+    "health_file_path": ".\\output\\service\\last-run.json",
+    "log_dir": ".\\output\\service\\logs",
+    "archive_dir": ".\\output\\service\\archive",
+    "archive_after_hours": 24,
+    "delete_original_after_archive": false
+  },
+  "pipeline": {
+    "source_drive": "E:",
+    "snapshot_data_path": "AOexpress",
+    "ldf_name": "OASIS_FLUX_log.ldf",
+    "live_server_instance": "LOCALHOST\\SQLEXPRESS",
+    "live_database": "OASIS_FLUX",
+    "client_id": "sample-client",
+    "environment": "test",
+    "sql_version_hint": "16.0.1150.1",
+    "tables": [
+      "oasis.CHSC_PO",
+      "oasis.CHSC_POLINE",
+      "oasis.CHSC_QUOTE"
+    ],
+    "users": [],
+    "exclude_users": [],
+    "spids": [],
+    "window_minutes": 15,
+    "bootstrap_first_run": false,
+    "raw_match_mode": "skip",
+    "apply_to_target": false,
+    "use_compiled_converter": true,
+    "reuse_shadow_device": null,
+    "skip_shadow_cleanup": false,
+    "skip_lsn_head_precheck": false,
+    "start_lsn": "00000032:000176F8:0001",
+    "update_mode": "adaptive",
+    "apply_target_server_instance": "LOCALHOST\\SQLEXPRESS",
+    "apply_target_database": "OASIS_FLUX",
+    "apply_stop_on_error": true,
+    "apply_wrap_in_transaction": false,
+    "compiled_converter_path": ".\\tools\\offline-log\\fast-quote-convert\\bin\\Release\\net8.0\\fast-quote-convert.exe",
+    "trn_output_path_template": "C:\\Temp\\mh.{table}.trn"
+  },
+  "security": {
+    "use_sql_auth": true,
+    "sql_user": "SaAdmin",
+    "sql_password": "Admin"
+  },
+  "notes": {
+    "starting_point_behavior": "The runner reads pipeline.start_lsn as the initial LSN only when needed. After execution it updates paths.state_path with the latest processed last_lsn. It does not rewrite this config file.",
+    "table_list_behavior": "Tables are configured as a JSON array. If you need comma-separated input operationally, convert that list before saving JSON.",
+    "trn_output_behavior": "trn_output_path_template is a requested operator-facing field. The current runner still writes per-table TRN files under paths.output_dir using its session naming pattern; this field is informational until we wire it into the runner."
+  }
+}

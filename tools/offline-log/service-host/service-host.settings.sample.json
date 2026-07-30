@@ -1,0 +1,9 @@
+{
+  "serviceName": "AOTransact",
+  "runnerExecutablePath": "..\\aotransact-runner\\AOtransact.Runner.exe",
+  "configPath": "..\\production.service.config.json",
+  "workingDirectory": "..\\..\\..",
+  "restartDelaySeconds": 5,
+  "restartOnUnexpectedExit": true,
+  "logPath": ".\\logs\\service-host.log"
+}

@@ -1,0 +1,59 @@
+﻿$PBExportHeader$d_report_ds_profit_analysis.srd
+release 11;
+datawindow(units=0 timer_interval=0 color=67108864 processing=0 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes print.preview.outline=yes hidegrayline=no showbackcoloronxp=no )
+header(height=120 color="536870912" )
+summary(height=0 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=76 color="536870912" )
+table(column=(type=char(6) updatewhereclause=yes name=job dbname="centre.job" dbalias=".job" )
+ column=(type=char(5) updatewhereclause=yes name=area dbname="centre.area" dbalias=".area" )
+ column=(type=char(5) updatewhereclause=yes name=group_area_ceiling dbname="centre.group_area_ceiling" dbalias=".group_area_ceiling" )
+ column=(type=char(6) updatewhereclause=yes name=centre dbname="centre.centre" dbalias=".centre" )
+ column=(type=char(6) updatewhereclause=yes name=group_centre_ceiling dbname="centre.group_centre_ceiling" dbalias=".group_centre_ceiling" )
+ column=(type=char(50) updatewhereclause=yes name=description dbname="centre.description" dbalias=".description" )
+ column=(type=char(5) updatewhereclause=yes name=cost_type dbname="centre.cost_type" dbalias=".cost_type" )
+ column=(type=char(35) updatewhereclause=yes name=job_description dbname="job.description" dbalias=".description" )
+ retrieve="  SELECT centre.job,   
+         centre.area,   
+         centre.group_area_ceiling,   
+         centre.centre,   
+         centre.group_centre_ceiling,   
+         centre.description,   
+         centre.cost_type,   
+         job.description  
+    FROM centre WITH (NOLOCK),   
+         job  
+   WHERE centre.job = job.job AND
+         centre.book = :as_book AND
+         job.book = :as_book AND
+         (centre.file_type = :as_file_type1 OR  
+         centre.file_type = :as_file_type2 OR  
+         centre.file_type = :as_file_type3) AND  
+         centre.job BETWEEN :as_from_job AND :as_to_job AND
+         centre.area BETWEEN :as_from_area AND :as_to_area AND
+         centre.centre BETWEEN :as_from_centre AND :as_to_centre AND
+         Right(centre.centre,4) = '0000' AND
+         centre.cost_type = 'G' AND
+         ((:as_access_restricted_data = 'N' AND centre.restrict_flag = 'N') OR :as_access_restricted_data = 'Y')
+ORDER BY centre.job ASC,   
+         centre.area ASC,   
+         centre.centre ASC   
+" arguments=(("as_book", string),("as_file_type1", string),("as_file_type2", string),("as_file_type3", string),("as_from_job", string),("as_to_job", string),("as_from_area", string),("as_to_area", string),("as_from_centre", string),("as_to_centre", string),("as_access_restricted_data", string))  sort="job A area A centre A " )
+text(band=header alignment="0" text="JOB" border="0" color="33554432" x="9" y="28" height="60" width="178" html.valueishtml="0"  name=client_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="1" text="CENTRE" border="0" color="33554432" x="576" y="28" height="60" width="229" html.valueishtml="0"  name=invoice_date_t visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="AREA" border="0" color="33554432" x="210" y="28" height="60" width="165" html.valueishtml="0"  name=t_2 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="0" text="DESCRIPTION" border="0" color="33554432" x="1001" y="28" height="60" width="416" html.valueishtml="0"  name=t_5 visible="1"  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+column(band=detail id=6 alignment="0" tabsequence=32766 border="0" color="33554432" x="997" y="8" height="60" width="1545" format="[general]" html.valueishtml="0"  name=description visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=1 alignment="0" tabsequence=32766 border="0" color="33554432" x="9" y="8" height="60" width="197" format="[general]" html.valueishtml="0"  name=job visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=4 alignment="1" tabsequence=32766 border="0" color="33554432" x="590" y="8" height="60" width="215" format="[general]" html.valueishtml="0"  name=centre visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+column(band=detail id=2 alignment="2" tabsequence=32766 border="0" color="33554432" x="229" y="8" height="60" width="128" format="[general]" html.valueishtml="0"  name=area visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-9" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" pagingmethod=0 generatedddwframes="1" )
+xhtmlgen() cssgen(sessionspecific="0" )
+xmlgen(inline="0" )
+xsltgen()
+jsgen()
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+export.xhtml()

@@ -1,0 +1,20 @@
+{
+  "connection_string": "Server=.;Database=INTEGRAMASTER_V3;Trusted_Connection=True;TrustServerCertificate=True;",
+  "source": {
+    "zip_search_pattern": "*.zip"
+  },
+  "properties": {
+    "require_checkpoint_file_present": true,
+    "select_sql": "SELECT ParmName, ParmValue FROM INTEGRAMASTER_V3.dbo.vw_TransactionsLoaderCompatibility_V3 WHERE ClientId = @ClientId AND ParmName IN ('DATASOURCE_LOCATION', 'LAST_TRANSACTION_BATCH', 'OASIS_DB');",
+    "update_last_batch_sql": "EXEC INTEGRAMASTER_V3.RT.SetIntegrationCheckpoint_V3 @ClientCode = @ClientId, @FeedCode = 'TRANSACTIONS', @CheckpointName = 'LAST_TRANSACTION_BATCH', @CheckpointValue = @ParmValue;"
+  },
+  "target": {
+    "insert_template": "INSERT INTO {OASIS_DB}.dbo.TransactionLog (Id, TransactionId, TransactionStatement, BatchTime, BatchId) VALUES (@Id, @TransactionId, @TransactionStatement, GETDATE(), @BatchId);"
+  },
+  "options": {
+    "dry_run": true,
+    "update_checkpoint": true,
+    "max_files": 10,
+    "predelete_before_insert": false
+  }
+}

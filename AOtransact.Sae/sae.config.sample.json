@@ -1,0 +1,28 @@
+{
+  "input_path": ".\\sample-data\\sae.log",
+  "manifest_output_path": ".\\output\\sae.manifest.json",
+  "trn_output_path": ".\\output\\sae.trn",
+  "server_instance": "SYBASE_HOST",
+  "database": "OASIS_SAE",
+  "tables": [
+    "oasis.CHSC_QUOTELINE"
+  ],
+  "rules": [
+    {
+      "pattern": "^(?<commit_time>\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?)\\s+spid=(?<spid>\\d+)\\s+tx=(?<tx_id>[^\\s]+)\\s+op=(?<operation>INSERT|UPDATE|DELETE)\\s+table=(?:(?<schema>[A-Za-z0-9_]+)\\.)?(?<table>[A-Za-z0-9_]+)\\s+sql=(?<sql>.+)$",
+      "operation_group": "operation",
+      "tx_id_group": "tx_id",
+      "schema_group": "schema",
+      "table_group": "table",
+      "spid_group": "spid",
+      "commit_time_group": "commit_time",
+      "sql_group": "sql",
+      "default_schema": "dbo",
+      "operation_map": {
+        "INSERT": "INSERT",
+        "UPDATE": "UPDATE",
+        "DELETE": "DELETE"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+﻿$PBExportHeader$d_pr_cheque_premium.srd
+release 11;
+datawindow(units=0 timer_interval=0 color=67108864 processing=1 HTMLDW=no print.printername="" print.documentname="" print.orientation = 0 print.margin.left = 110 print.margin.right = 110 print.margin.top = 96 print.margin.bottom = 96 print.paper.source = 0 print.paper.size = 0 print.canusedefaultprinter=yes print.prompt=no print.buttons=no print.preview.buttons=no print.cliptext=no print.overrideprintjob=no print.collate=yes print.preview.outline=yes hidegrayline=no showbackcoloronxp=no grid.lines=0 )
+header(height=80 color="536870912" )
+summary(height=84 color="536870912" )
+footer(height=0 color="536870912" )
+detail(height=76 color="536870912" )
+table(column=(type=char(1) updatewhereclause=yes name=action dbname="action" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=book dbname="pr_cheque_premium.book" )
+ column=(type=long update=yes updatewhereclause=yes name=cheque_no dbname="pr_cheque_premium.cheque_no" )
+ column=(type=char(8) update=yes updatewhereclause=yes name=premium_type dbname="pr_cheque_premium.premium_type" )
+ column=(type=char(25) updatewhereclause=yes name=premium_type_description dbname="premium_type.description" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=reg_earn dbname="pr_cheque_premium.reg_earn" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=tah_earn dbname="pr_cheque_premium.tah_earn" )
+ column=(type=decimal(2) update=yes updatewhereclause=yes name=ovr_earn dbname="pr_cheque_premium.ovr_earn" )
+ column=(type=decimal(2) updatewhereclause=yes name=cc_total dbname="cc_total" )
+ retrieve="  SELECT 'I' as action,
+         ~"pr_cheque_premium~".~"book~",   
+         ~"pr_cheque_premium~".~"cheque_no~",   
+         ~"pr_cheque_premium~".~"premium_type~",   
+         ~"premium_type~".~"description~",   
+         ~"pr_cheque_premium~".~"reg_earn~",   
+         ~"pr_cheque_premium~".~"tah_earn~",   
+         ~"pr_cheque_premium~".~"ovr_earn~",
+  			~"pr_cheque_premium~".~"reg_earn~"+~"pr_cheque_premium~".~"tah_earn~"+~"pr_cheque_premium~".~"ovr_earn~" as cc_total
+    FROM ~"pr_cheque_premium~" ,   
+         ~"premium_type~"  
+   WHERE ( ~"premium_type~".~"premium_type~" = ~"pr_cheque_premium~".~"premium_type~" )    
+" )
+text(band=header alignment="2" text="regular" border="6" color="134217735" x="914" y="8" height="64" width="338" html.valueishtml="0"  name=reg_earn_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="time && half" border="6" color="134217735" x="1262" y="8" height="64" width="421" html.valueishtml="0"  name=tah_earn_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="overtime" border="6" color="134217735" x="1691" y="8" height="64" width="347" html.valueishtml="0"  name=ovr_earn_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="total" border="6" color="33554432" x="2048" y="8" height="64" width="398" html.valueishtml="0"  name=cc_total_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=header alignment="2" text="description" border="6" color="33554432" x="9" y="8" height="64" width="896" html.valueishtml="0"  name=premium_type_description_t visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=9 alignment="1" tabsequence=32766 border="0" color="33554432" x="2048" y="4" height="64" width="398" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=cc_total visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="67108864" )
+column(band=detail id=5 alignment="0" tabsequence=10 border="0" color="8388608" x="9" y="4" height="60" width="896" format="[general]" html.valueishtml="0"  name=premium_type_description pointer="HyperLink!" visible="1" edit.limit=0 edit.case=any edit.focusrectangle=no edit.autoselect=no  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" font.underline="1" background.mode="2" background.color="67108864" )
+column(band=detail id=6 alignment="1" tabsequence=20 border="5" color="33554432" x="919" y="4" height="64" width="334" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=reg_earn  tag="<H>Numeric <H>" visible="1" editmask.useformat=yes editmask.mask="###,###.00" editmask.focusrectangle=no  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=7 alignment="1" tabsequence=30 border="5" color="33554432" x="1262" y="4" height="64" width="421" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=tah_earn  tag="<H>Numeric <H>" visible="1" editmask.useformat=yes editmask.mask="###,###.00" editmask.focusrectangle=no  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+column(band=detail id=8 alignment="1" tabsequence=40 border="5" color="33554432" x="1691" y="4" height="64" width="347" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=ovr_earn  tag="<H>Numeric <H>" visible="1" editmask.useformat=yes editmask.mask="###,###.00" editmask.focusrectangle=no  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="2" background.color="1073741824" )
+compute(band=summary alignment="1" expression="sum(reg_earn for all)"border="0" color="33554432" x="914" y="8" height="64" width="338" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=compute_1 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="1" expression="sum(tah_earn for all)"border="0" color="33554432" x="1262" y="8" height="64" width="421" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=compute_2 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="1" expression="sum(ovr_earn for all)"border="0" color="33554432" x="1691" y="8" height="64" width="347" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=compute_3 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+compute(band=summary alignment="1" expression="sum(cc_total for all)"border="0" color="33554432" x="2048" y="8" height="64" width="398" format="#,##0.00;[RED](#,##0.00);#" html.valueishtml="0"  name=compute_4 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="536870912" )
+text(band=summary alignment="1" text="total    " border="0" color="33554432" x="9" y="12" height="64" width="896" html.valueishtml="0"  name=t_1 visible="1"  font.face="Arial" font.height="-10" font.weight="400"  font.family="2" font.pitch="2" font.charset="0" background.mode="1" background.color="553648127" )
+htmltable(border="1" )
+htmlgen(clientevents="1" clientvalidation="1" clientcomputedfields="1" clientformatting="0" clientscriptable="0" generatejavascript="1" encodeselflinkargs="1" netscapelayers="0" pagingmethod=0 generatedddwframes="1" )
+xhtmlgen() cssgen(sessionspecific="0" )
+xmlgen(inline="0" )
+xsltgen()
+jsgen()
+export.xml(headgroups="1" includewhitespace="0" metadatatype=0 savemetadata=0 )
+import.xml()
+export.pdf(method=0 distill.custompostscript="0" xslfop.print="0" )
+export.xhtml()
+ 

@@ -1,0 +1,19 @@
+{
+  "connection_string": "Server=LOCALHOST\\ERPLINK;Integrated Security=true;TrustServerCertificate=true;Encrypt=false;",
+  "source": {
+    "zip_search_pattern": "*.zip"
+  },
+  "properties": {
+    "require_checkpoint_file_present": true,
+    "select_sql": "SELECT ParmName, ParmValue FROM INTEGRAMASTER_V2.dbo.ClientProperties WHERE ClientId = @ClientId AND ParmName IN ('DATASOURCE_LOCATION', 'LAST_TRANSACTION_BATCH', 'OASIS_DB');",
+    "update_last_batch_sql": "UPDATE INTEGRAMASTER_V2.dbo.ClientProperties SET ParmValue = @ParmValue WHERE ClientId = @ClientId AND ParmName = 'LAST_TRANSACTION_BATCH';"
+  },
+  "target": {
+    "insert_template": "INSERT INTO {OASIS_DB}.dbo.TransactionLog (Id, TransactionId, TransactionStatement, BatchTime, BatchId) VALUES (@Id, @TransactionId, @TransactionStatement, GETDATE(), @BatchId);"
+  },
+  "options": {
+    "dry_run": false,
+    "update_checkpoint": true,
+    "max_files": 1
+  }
+}
