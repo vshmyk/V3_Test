@@ -2,6 +2,8 @@
 
 Object-by-object migration harness for moving Oasis/MACSII business-layer data into Parspec.
 
+Current working migration plan: [PARSPEC_MIGRATION_CHECKLIST.md](/abs/path/C:/Users/vshmyk/AOprojects/AOtransact/tools/parspec-migrator/PARSPEC_MIGRATION_CHECKLIST.md)
+
 ## Current slice
 
 The first implemented slice is `Users`.

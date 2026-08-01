@@ -47,6 +47,7 @@ internal sealed class ParspecMigratorApp
             "opportunities-scan" => await RunOpportunitiesScanAsync(config),
             "boms-scan" => await RunBomsScanAsync(config),
             "bom-lines-scan" => await RunBomLinesScanAsync(config),
+            "purchase-orders-scan" => await RunPurchaseOrdersScanAsync(config),
             "boms-create" => await RunBomsCreateAsync(config, args.Skip(1).ToArray()),
             "boms-create-all" => await RunBomsCreateAllAsync(config, args.Skip(1).ToArray()),
             "opportunities-create" => await RunOpportunitiesCreateAsync(config, args.Skip(1).ToArray()),
@@ -82,6 +83,7 @@ internal sealed class ParspecMigratorApp
         Console.WriteLine("  opportunities-scan  Build the first-pass quote-header/opportunity migration report.");
         Console.WriteLine("  boms-scan        Build the first-pass BOM-header migration report.");
         Console.WriteLine("  bom-lines-scan   Build the first-pass BOM-line migration report.");
+        Console.WriteLine("  purchase-orders-scan  Build the first-pass purchase-order migration report.");
         Console.WriteLine("  boms-create      Create one Parspec BOM from PARSPEC_MACSII.src.QuoteItem.");
         Console.WriteLine("                   Usage: boms-create <projectErpId> <quoteId>");
         Console.WriteLine("  boms-create-all  Create BOM candidates in Parspec.");
@@ -369,6 +371,30 @@ internal sealed class ParspecMigratorApp
         Console.WriteLine($"Lines with model number: {report.Summary.LinesWithModelNumber}");
         Console.WriteLine($"Lines with quantity: {report.Summary.LinesWithQuantity}");
         Console.WriteLine($"Lines with extended sell: {report.Summary.LinesWithExtendedSellAmount}");
+
+        return 0;
+    }
+
+    private static async Task<int> RunPurchaseOrdersScanAsync(ParspecMigratorConfig config)
+    {
+        Directory.CreateDirectory(config.OutputDirectory);
+
+        var report = await BuildPurchaseOrderReportAsync(config.BusinessConnectionString);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        var outputPath = Path.Combine(config.OutputDirectory, $"purchase-orders-scan.{timestamp}.json");
+
+        await File.WriteAllTextAsync(outputPath, JsonSerializer.Serialize(report, JsonOptions));
+
+        Console.WriteLine("Purchase order scan complete.");
+        Console.WriteLine($"Output: {outputPath}");
+        Console.WriteLine($"Total purchase orders: {report.Summary.TotalPurchaseOrders}");
+        Console.WriteLine($"Total purchase order lines: {report.Summary.TotalPurchaseOrderLines}");
+        Console.WriteLine($"Resolvable base-PO fields: {report.Summary.ResolvedBaseFields}/{report.Summary.TotalBaseFields}");
+        Console.WriteLine($"Unresolved base-PO fields: {report.Summary.UnresolvedBaseFields}");
+        Console.WriteLine($"POs with project linkage: {report.Summary.PurchaseOrdersWithProjectErpId}");
+        Console.WriteLine($"POs with business PO number: {report.Summary.PurchaseOrdersWithPoNumber}");
+        Console.WriteLine($"PO lines with part number: {report.Summary.PurchaseOrderLinesWithPartNumber}");
+        Console.WriteLine($"PO lines with tracking number: {report.Summary.PurchaseOrderLinesWithTrackingNumber}");
 
         return 0;
     }
@@ -2058,6 +2084,39 @@ ORDER BY a.DISTRIBUTORNAME, a.AccountId;
         };
     }
 
+    private static async Task<PurchaseOrderMigrationReport> BuildPurchaseOrderReportAsync(string businessConnectionString)
+    {
+        var purchaseOrders = await LoadPurchaseOrderCandidatesAsync(businessConnectionString);
+        var purchaseOrderLines = await LoadPurchaseOrderLineCandidatesAsync(businessConnectionString);
+        var fields = BuildPurchaseOrderFieldCoverage(purchaseOrders, purchaseOrderLines);
+        var resolvedBaseFields = fields.Count(field => !string.Equals(field.Status, "unresolved", StringComparison.OrdinalIgnoreCase));
+
+        return new PurchaseOrderMigrationReport
+        {
+            GeneratedAtUtc = DateTime.UtcNow,
+            Summary = new PurchaseOrderMigrationSummary
+            {
+                TotalPurchaseOrders = purchaseOrders.Count,
+                TotalPurchaseOrderLines = purchaseOrderLines.Count,
+                TotalBaseFields = fields.Count,
+                ResolvedBaseFields = resolvedBaseFields,
+                UnresolvedBaseFields = fields.Count - resolvedBaseFields,
+                PurchaseOrdersWithErpId = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ErpId)),
+                PurchaseOrdersWithPoNumber = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.PoNumber)),
+                PurchaseOrdersWithProjectErpId = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ProjectErpId)),
+                PurchaseOrdersWithQuoteId = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.QuoteId)),
+                PurchaseOrdersWithDistributor = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.DistributorErpId)),
+                PurchaseOrdersWithManufacturer = purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ManufacturerErpId)),
+                PurchaseOrderLinesWithPartNumber = purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.PartNumber)),
+                PurchaseOrderLinesWithManufacturer = purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.ManufacturerErpId)),
+                PurchaseOrderLinesWithTrackingNumber = purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.TrackingNumber))
+            },
+            FieldCoverage = fields,
+            PurchaseOrders = purchaseOrders.Take(200).ToList(),
+            PurchaseOrderLines = purchaseOrderLines.Take(250).ToList()
+        };
+    }
+
     private static async Task<BomMigrationContext> BuildBomMigrationContextAsync(
         ParspecMigratorConfig config,
         IReadOnlyDictionary<string, int> locationMap)
@@ -2676,6 +2735,201 @@ ORDER BY
         return bomLines;
     }
 
+    private static async Task<List<PurchaseOrderCandidate>> LoadPurchaseOrderCandidatesAsync(string businessConnectionString)
+    {
+        const string sql = """
+SELECT
+    Project__c,
+    ProjectId,
+    DBID,
+    POID,
+    QuoteId,
+    POnumber,
+    POdate,
+    QuoteUserId,
+    POstatus,
+    ProjectExternalId,
+    DistributorId,
+    ManufacturerId,
+    Ordered,
+    Released,
+    TotalSell,
+    TotalPrice,
+    POTotal,
+    UpdateDate,
+    Margin,
+    Invoiced,
+    AmountPaid,
+    Earnings,
+    Overage,
+    Profit,
+    WorkGroup,
+    IncentivePool,
+    QuoteNumber,
+    BuySell,
+    AOBuySell
+FROM src.PurchaseOrder
+ORDER BY
+    ProjectExternalId,
+    DBID,
+    POID;
+""";
+
+        var purchaseOrders = new List<PurchaseOrderCandidate>();
+        await using var connection = new SqlConnection(businessConnectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            var dbId = GetNullableString(reader, "DBID");
+            var poId = GetNullableString(reader, "POID");
+
+            purchaseOrders.Add(new PurchaseOrderCandidate
+            {
+                DbId = dbId,
+                PoId = poId,
+                ErpId = BuildPurchaseOrderErpId(dbId, poId),
+                ProjectAoId = GetNullableString(reader, "Project__c"),
+                ProjectId = GetNullableString(reader, "ProjectId"),
+                ProjectErpId = GetNullableString(reader, "ProjectExternalId"),
+                QuoteId = GetNullableString(reader, "QuoteId"),
+                PoNumber = NullIfWhiteSpace(GetNullableString(reader, "POnumber")),
+                PoDate = GetNullableDateTime(reader, "POdate"),
+                QuoteUserAoId = GetNullableString(reader, "QuoteUserId"),
+                PoStatus = GetNullableString(reader, "POstatus"),
+                DistributorErpId = GetNullableString(reader, "DistributorId"),
+                ManufacturerErpId = GetNullableString(reader, "ManufacturerId"),
+                Ordered = GetNullableDecimal(reader, "Ordered"),
+                Released = GetNullableDecimal(reader, "Released"),
+                TotalSell = GetNullableDecimal(reader, "TotalSell"),
+                TotalPrice = GetNullableDecimal(reader, "TotalPrice"),
+                PoTotal = GetNullableDecimal(reader, "POTotal"),
+                UpdateDate = GetNullableDateTime(reader, "UpdateDate"),
+                Margin = GetNullableDecimal(reader, "Margin"),
+                Invoiced = GetNullableDecimal(reader, "Invoiced"),
+                AmountPaid = GetNullableDecimal(reader, "AmountPaid"),
+                Earnings = GetNullableDecimal(reader, "Earnings"),
+                Overage = GetNullableDecimal(reader, "Overage"),
+                Profit = GetNullableDecimal(reader, "Profit"),
+                WorkGroup = GetNullableString(reader, "WorkGroup"),
+                IncentivePool = GetNullableDecimal(reader, "IncentivePool"),
+                QuoteNumber = GetNullableString(reader, "QuoteNumber"),
+                BuySell = GetNullableString(reader, "BuySell"),
+                AoBuySell = GetNullableInt(reader, "AOBuySell")
+            });
+        }
+
+        return purchaseOrders;
+    }
+
+    private static async Task<List<PurchaseOrderLineCandidate>> LoadPurchaseOrderLineCandidatesAsync(string businessConnectionString)
+    {
+        const string sql = """
+SELECT
+    DBID,
+    POId,
+    EntryDate,
+    TransactionType,
+    LineUID,
+    Linenumber,
+    ItemNumber,
+    Ordered,
+    Released,
+    ReleasedDate,
+    Shipped,
+    Shipment,
+    TargetDate,
+    ShippedDate,
+    Carrier,
+    TrackingNumber,
+    ManufacturerId,
+    FixtureType,
+    PartNumber,
+    Note,
+    transactiondate,
+    Extension,
+    NetPrice,
+    BuyPrice,
+    Markup,
+    BUYSELL,
+    Overage,
+    Commission,
+    Project_Id,
+    PurchaseOrder_Id,
+    PO_CreatedDate,
+    ShipmentId,
+    ShipmentlineUID,
+    UpdateDate,
+    ParentLineUID
+FROM src.PurchaseOrderItem
+ORDER BY
+    DBID,
+    POId,
+    ItemNumber,
+    LineUID;
+""";
+
+        var purchaseOrderLines = new List<PurchaseOrderLineCandidate>();
+        await using var connection = new SqlConnection(businessConnectionString);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            var dbId = GetNullableString(reader, "DBID");
+            var poId = GetNullableString(reader, "POId");
+            var itemNumber = GetNullableDecimal(reader, "ItemNumber");
+            var lineUid = GetNullableDecimal(reader, "LineUID");
+
+            purchaseOrderLines.Add(new PurchaseOrderLineCandidate
+            {
+                DbId = dbId,
+                PoId = poId,
+                PurchaseOrderErpId = BuildPurchaseOrderErpId(dbId, poId),
+                SourceLineId = BuildPurchaseOrderLineSourceId(dbId, poId, lineUid, itemNumber),
+                ErpLineId = BuildPurchaseOrderLineErpId(lineUid, itemNumber),
+                EntryDate = GetNullableDateTime(reader, "EntryDate"),
+                TransactionType = GetNullableString(reader, "TransactionType"),
+                LineUid = lineUid,
+                LineNumber = GetNullableDecimal(reader, "Linenumber"),
+                ItemNumber = itemNumber,
+                Ordered = GetNullableDecimal(reader, "Ordered"),
+                Released = GetNullableDecimal(reader, "Released"),
+                ReleasedDate = GetNullableDateTime(reader, "ReleasedDate"),
+                Shipped = GetNullableDecimal(reader, "Shipped"),
+                Shipment = GetNullableString(reader, "Shipment"),
+                TargetDate = GetNullableDateTime(reader, "TargetDate"),
+                ShippedDate = GetNullableDateTime(reader, "ShippedDate"),
+                Carrier = GetNullableString(reader, "Carrier"),
+                TrackingNumber = NormalizeProductText(GetNullableString(reader, "TrackingNumber")),
+                ManufacturerErpId = GetNullableString(reader, "ManufacturerId"),
+                FixtureType = GetNullableString(reader, "FixtureType"),
+                PartNumber = NormalizeProductText(GetNullableString(reader, "PartNumber")),
+                Note = NormalizeProductText(GetNullableString(reader, "Note")),
+                TransactionDate = GetNullableDateTime(reader, "transactiondate"),
+                Extension = GetNullableDecimal(reader, "Extension"),
+                NetPrice = GetNullableDecimal(reader, "NetPrice"),
+                BuyPrice = GetNullableDecimal(reader, "BuyPrice"),
+                Markup = GetNullableDecimal(reader, "Markup"),
+                BuySell = GetNullableString(reader, "BUYSELL"),
+                Overage = GetNullableDecimal(reader, "Overage"),
+                Commission = GetNullableDecimal(reader, "Commission"),
+                ProjectAoId = GetNullableString(reader, "Project_Id"),
+                PurchaseOrderAoId = GetNullableString(reader, "PurchaseOrder_Id"),
+                PoCreatedDate = GetNullableDateTime(reader, "PO_CreatedDate"),
+                ShipmentId = GetNullableString(reader, "ShipmentId"),
+                ShipmentLineUid = GetNullableDecimal(reader, "ShipmentlineUID"),
+                UpdateDate = GetNullableDateTime(reader, "UpdateDate"),
+                ParentLineUid = GetNullableDecimal(reader, "ParentLineUID")
+            });
+        }
+
+        return purchaseOrderLines;
+    }
+
     private static IReadOnlyList<DestinationFieldCoverage> BuildOpportunityFieldCoverage(IReadOnlyList<OpportunityCandidate> opportunities)
     {
         var total = opportunities.Count;
@@ -2733,6 +2987,33 @@ ORDER BY
         ];
     }
 
+    private static IReadOnlyList<DestinationFieldCoverage> BuildPurchaseOrderFieldCoverage(
+        IReadOnlyList<PurchaseOrderCandidate> purchaseOrders,
+        IReadOnlyList<PurchaseOrderLineCandidate> purchaseOrderLines)
+    {
+        var totalHeaders = purchaseOrders.Count;
+        var totalLines = purchaseOrderLines.Count;
+
+        return
+        [
+            new DestinationFieldCoverage("erpId", "derived", "src.PurchaseOrder.DBID + POID", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ErpId)), "A stable composite PO ERP id can be derived from the business-layer DBID and POID."),
+            new DestinationFieldCoverage("poNumber", "direct", "src.PurchaseOrder.POnumber", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.PoNumber)), "Business PO number is broadly available."),
+            new DestinationFieldCoverage("project", "direct", "src.PurchaseOrder.ProjectExternalId -> Parspec project erpId", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ProjectErpId)), "Most purchase orders are already tied to a source project external id."),
+            new DestinationFieldCoverage("opportunityOrQuoteContext", "derived", "src.PurchaseOrder.QuoteId", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.QuoteId)), "Quote linkage exists for a subset of purchase orders and will help attach future PO flows to opportunity/BOM context."),
+            new DestinationFieldCoverage("payToOrVendor", "direct", "src.PurchaseOrder.ManufacturerId", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.ManufacturerErpId)), "Manufacturer/vendor linkage is available on most PO headers."),
+            new DestinationFieldCoverage("shipFromOrDistributor", "direct", "src.PurchaseOrder.DistributorId", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.DistributorErpId)), "Distributor linkage is available on many PO headers."),
+            new DestinationFieldCoverage("status", "direct", "src.PurchaseOrder.POstatus", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.PoStatus)), "Header status is already normalized in the business layer."),
+            new DestinationFieldCoverage("grandTotalAmount", "direct", "src.PurchaseOrder.POTotal", totalHeaders, purchaseOrders.Count(po => po.PoTotal.HasValue), "The rolled-up PO total is exposed directly."),
+            new DestinationFieldCoverage("releaseQuantity", "direct", "src.PurchaseOrder.Released", totalHeaders, purchaseOrders.Count(po => po.Released.HasValue), "Released quantities are available at the header level."),
+            new DestinationFieldCoverage("priceBranchWorkgroup", "direct", "src.PurchaseOrder.WorkGroup", totalHeaders, purchaseOrders.Count(po => !string.IsNullOrWhiteSpace(po.WorkGroup)), "Workgroup/branch context is available for branch mapping decisions."),
+            new DestinationFieldCoverage("lineItems.erpLineId", "derived", "src.PurchaseOrderItem.LineUID fallback ItemNumber", totalLines, purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.ErpLineId)), "PO lines already have stable candidate external line ids."),
+            new DestinationFieldCoverage("lineItems.partNumber", "direct", "src.PurchaseOrderItem.PartNumber", totalLines, purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.PartNumber)), "Most PO lines carry a part number."),
+            new DestinationFieldCoverage("lineItems.manufacturerErpId", "direct", "src.PurchaseOrderItem.ManufacturerId", totalLines, purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.ManufacturerErpId)), "PO line manufacturer linkage is strong."),
+            new DestinationFieldCoverage("lineItems.trackingNumber", "direct", "src.PurchaseOrderItem.TrackingNumber", totalLines, purchaseOrderLines.Count(line => !string.IsNullOrWhiteSpace(line.TrackingNumber)), "Tracking data exists for a subset of shipped lines."),
+            new DestinationFieldCoverage("publicWriteEndpoint", "unresolved", "Parspec public materials currently expose Purchase Orders as read-only", totalHeaders, 0, "We can prepare PO payload contracts now, but creation/upsert APIs have not yet been published.")
+        ];
+    }
+
     private static string? BuildBomCrmId(string? dbId, string? quoteId)
     {
         var normalizedDbId = NullIfWhiteSpace(dbId);
@@ -2775,6 +3056,40 @@ ORDER BY
     {
         var normalized = NullIfWhiteSpace(value);
         return normalized?.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ").Trim();
+    }
+
+    private static string? BuildPurchaseOrderErpId(string? dbId, string? poId)
+    {
+        var normalizedDbId = NullIfWhiteSpace(dbId);
+        var normalizedPoId = NullIfWhiteSpace(poId);
+        return normalizedDbId is null || normalizedPoId is null
+            ? null
+            : $"{normalizedDbId}:PO:{normalizedPoId}";
+    }
+
+    private static string? BuildPurchaseOrderLineSourceId(string? dbId, string? poId, decimal? lineUid, decimal? itemNumber)
+    {
+        var poErpId = BuildPurchaseOrderErpId(dbId, poId);
+        if (poErpId is null)
+        {
+            return null;
+        }
+
+        return lineUid.HasValue
+            ? $"{poErpId}:LINE:{lineUid.Value:0.##}"
+            : itemNumber.HasValue
+                ? $"{poErpId}:ITEM:{itemNumber.Value:0.##}"
+                : null;
+    }
+
+    private static string? BuildPurchaseOrderLineErpId(decimal? lineUid, decimal? itemNumber)
+    {
+        if (lineUid.HasValue)
+        {
+            return lineUid.Value.ToString("0.##");
+        }
+
+        return itemNumber.HasValue ? itemNumber.Value.ToString("0.##") : null;
     }
 
     private static string? BuildSourceContactKey(string? contactDbId, string? contactId)
@@ -5560,7 +5875,19 @@ ORDER BY sb.ProjectErpId, pa.AccountCategory, pa.Role, pa.AccountId, pa.ContactI
     private static DateTime? GetNullableDateTime(SqlDataReader reader, string columnName)
     {
         var ordinal = reader.GetOrdinal(columnName);
-        return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+        if (reader.IsDBNull(ordinal))
+        {
+            return null;
+        }
+
+        var value = reader.GetValue(ordinal);
+        return value switch
+        {
+            DateTime dateTime => dateTime,
+            DateTimeOffset dateTimeOffset => dateTimeOffset.UtcDateTime,
+            string text when DateTime.TryParse(text, out var parsed) => parsed,
+            _ => Convert.ToDateTime(value)
+        };
     }
 
     private static bool? GetNullableBoolean(SqlDataReader reader, string columnName)
@@ -6126,6 +6453,109 @@ internal sealed record BomLineCandidate
     public decimal? Level3Amount { get; init; }
     public string? BidStatus { get; init; }
     public DateTime? UpdateDate { get; init; }
+}
+
+internal sealed record PurchaseOrderMigrationSummary
+{
+    public int TotalPurchaseOrders { get; init; }
+    public int TotalPurchaseOrderLines { get; init; }
+    public int TotalBaseFields { get; init; }
+    public int ResolvedBaseFields { get; init; }
+    public int UnresolvedBaseFields { get; init; }
+    public int PurchaseOrdersWithErpId { get; init; }
+    public int PurchaseOrdersWithPoNumber { get; init; }
+    public int PurchaseOrdersWithProjectErpId { get; init; }
+    public int PurchaseOrdersWithQuoteId { get; init; }
+    public int PurchaseOrdersWithDistributor { get; init; }
+    public int PurchaseOrdersWithManufacturer { get; init; }
+    public int PurchaseOrderLinesWithPartNumber { get; init; }
+    public int PurchaseOrderLinesWithManufacturer { get; init; }
+    public int PurchaseOrderLinesWithTrackingNumber { get; init; }
+}
+
+internal sealed record PurchaseOrderMigrationReport
+{
+    public DateTime GeneratedAtUtc { get; init; }
+    public required PurchaseOrderMigrationSummary Summary { get; init; }
+    public required IReadOnlyList<DestinationFieldCoverage> FieldCoverage { get; init; }
+    public required IReadOnlyList<PurchaseOrderCandidate> PurchaseOrders { get; init; }
+    public required IReadOnlyList<PurchaseOrderLineCandidate> PurchaseOrderLines { get; init; }
+}
+
+internal sealed record PurchaseOrderCandidate
+{
+    public string? DbId { get; init; }
+    public string? PoId { get; init; }
+    public string? ErpId { get; init; }
+    public string? ProjectAoId { get; init; }
+    public string? ProjectId { get; init; }
+    public string? ProjectErpId { get; init; }
+    public string? QuoteId { get; init; }
+    public string? PoNumber { get; init; }
+    public DateTime? PoDate { get; init; }
+    public string? QuoteUserAoId { get; init; }
+    public string? PoStatus { get; init; }
+    public string? DistributorErpId { get; init; }
+    public string? ManufacturerErpId { get; init; }
+    public decimal? Ordered { get; init; }
+    public decimal? Released { get; init; }
+    public decimal? TotalSell { get; init; }
+    public decimal? TotalPrice { get; init; }
+    public decimal? PoTotal { get; init; }
+    public DateTime? UpdateDate { get; init; }
+    public decimal? Margin { get; init; }
+    public decimal? Invoiced { get; init; }
+    public decimal? AmountPaid { get; init; }
+    public decimal? Earnings { get; init; }
+    public decimal? Overage { get; init; }
+    public decimal? Profit { get; init; }
+    public string? WorkGroup { get; init; }
+    public decimal? IncentivePool { get; init; }
+    public string? QuoteNumber { get; init; }
+    public string? BuySell { get; init; }
+    public int? AoBuySell { get; init; }
+}
+
+internal sealed record PurchaseOrderLineCandidate
+{
+    public string? DbId { get; init; }
+    public string? PoId { get; init; }
+    public string? PurchaseOrderErpId { get; init; }
+    public string? SourceLineId { get; init; }
+    public string? ErpLineId { get; init; }
+    public DateTime? EntryDate { get; init; }
+    public string? TransactionType { get; init; }
+    public decimal? LineUid { get; init; }
+    public decimal? LineNumber { get; init; }
+    public decimal? ItemNumber { get; init; }
+    public decimal? Ordered { get; init; }
+    public decimal? Released { get; init; }
+    public DateTime? ReleasedDate { get; init; }
+    public decimal? Shipped { get; init; }
+    public string? Shipment { get; init; }
+    public DateTime? TargetDate { get; init; }
+    public DateTime? ShippedDate { get; init; }
+    public string? Carrier { get; init; }
+    public string? TrackingNumber { get; init; }
+    public string? ManufacturerErpId { get; init; }
+    public string? FixtureType { get; init; }
+    public string? PartNumber { get; init; }
+    public string? Note { get; init; }
+    public DateTime? TransactionDate { get; init; }
+    public decimal? Extension { get; init; }
+    public decimal? NetPrice { get; init; }
+    public decimal? BuyPrice { get; init; }
+    public decimal? Markup { get; init; }
+    public string? BuySell { get; init; }
+    public decimal? Overage { get; init; }
+    public decimal? Commission { get; init; }
+    public string? ProjectAoId { get; init; }
+    public string? PurchaseOrderAoId { get; init; }
+    public DateTime? PoCreatedDate { get; init; }
+    public string? ShipmentId { get; init; }
+    public decimal? ShipmentLineUid { get; init; }
+    public DateTime? UpdateDate { get; init; }
+    public decimal? ParentLineUid { get; init; }
 }
 
 internal sealed record BomContactRef
