@@ -1,6 +1,6 @@
 # Parspec Migration Summary
 
-Last updated: 2026-08-08 UTC
+Last updated: 2026-08-17 UTC
 
 ## Purpose
 
@@ -18,7 +18,8 @@ The current implementation is organized around three workstreams:
 - inherited logic baseline: `MACSII_V2`
 - raw Oasis fallback: `OASIS_MACSII`
 - SQL Server: local `ERPLINK` instance
-- active Parspec development target: Minor staging sandbox
+- active Parspec development target: `https://sandbox-app.parspec.io/`
+- active sandbox API base: `https://platform-sandbox.parspec.io/platform-api/api/`
 
 ## Migration rules
 
@@ -52,6 +53,9 @@ The current implementation is organized around three workstreams:
 - Opportunities cannot be deleted through the public API
 - BOM support is currently header-level in the validated public materials
 - BOM-line and Quote-line public write APIs were not available in the validated partner materials
+- Purchase Orders, Sales Orders, Quotes, and their lines are read-only in the current public sandbox API
+- Customer and vendor invoice writes are supported, but require existing Sales Order and Purchase Order parents respectively
+- Product Master and inventory support ERP-ID-based batch upsert/delete operations
 
 ## Object status
 
@@ -65,6 +69,7 @@ The current implementation is organized around three workstreams:
 - `Quote headers`: source mapping prepared, awaiting final public write path
 - `BOM lines`: source scan and payload contract prepared, awaiting public write path
 - `Purchase Orders`: source scan/readiness work implemented, public write path not yet established
+- `Vendor invoices`: source procedure implemented and validated in `PARSPEC_MACSII`; destination writes await migrated Purchase Order parents
 
 ## Source counts observed in the MACSII working set
 
@@ -76,7 +81,7 @@ The current implementation is organized around three workstreams:
 - quotes/bids: about `54,307`
 - BOM lines: about `598,434`
 - purchase orders: about `33,973`
-- purchase order lines: about `357,608`
+- canonical ordered purchase order lines: about `139,166`
 
 ## Cross-agency sizing guidance
 
@@ -105,6 +110,30 @@ The current implementation is organized around three workstreams:
 - `TotalQuoted = Project.Sell`
 - `projectStakeholders` should come from `ProjectAccount` tied to the last active Oasis bid
 
+## Purchase Order readiness
+
+- Stable PO ERP IDs use the form `DBID:PO:<PurchaseOrderId>`.
+- Canonical PO lines include only `TransactionType = 'O'`; release and shipment rows are excluded.
+- Unit cost uses positive `BuyPrice`, with `NetPrice` as fallback.
+- Extended cost is unit cost multiplied by ordered quantity.
+- A ready-only 20-PO / 40-line Oasis test package was generated successfully.
+- No PO data was sent because the current Parspec API exposes Purchase Orders as read-only.
+
+## Verified Oasis sandbox test
+
+On `2026-08-17`, a dependency-complete set of real Oasis records was migrated and verified by follow-up API reads:
+
+- company `WES` / WESCO (Burnaby)
+- contact `MACSBCCA001:97711` / Dakota Frego
+- manufacturer `A-LINE` / A-LINE LIGHTING
+- project `MACSBCCA001113467113468` / WHITE SPOT @ IDAF
+- opportunity for Oasis quote `81799`
+- BOM header for Oasis quote `81799`
+
+The project stakeholder and BOM primary contact both resolved to the migrated WESCO company/contact relationship. The source BOM has 26 lines, but those lines were not sent because no BOM-line write endpoint is currently available.
+
+API keys are supplied through `PARSPEC_API_KEY` and must not be committed.
+
 ## Important mapping clarifications
 
 - `squareFootage` should be exposed through the business layer from raw project / bid-package data
@@ -124,6 +153,7 @@ The current implementation is organized around three workstreams:
 4. `tools/parspec-migrator/Program.cs`
 5. `tools/parspec-bootstrap/README.md`
 6. `tools/parspec-emulator/README.md`
+7. `tools/parspec-bootstrap/PARSPEC_MACSII.VendorInvoiceOrigin.20260810.sql`
 
 ## Immediate next steps
 
