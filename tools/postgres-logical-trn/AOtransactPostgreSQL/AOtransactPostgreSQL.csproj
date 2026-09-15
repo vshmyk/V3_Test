@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AOtransactPostgreSQL</AssemblyName>
+    <RootNamespace>AOtransactPostgreSQL</RootNamespace>
+    <Version>1.8.1</Version>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\Capture-PostgreSQLLogicalBatch.ps1"
+                      Link="Scripts\Capture-PostgreSQLLogicalBatch.ps1"
+                      LogicalName="AOtransactPostgreSQL.Capture-PostgreSQLLogicalBatch.ps1" />
+    <EmbeddedResource Include="..\Configure-AOtransactPostgreSQL.ps1"
+                      Link="Scripts\Configure-AOtransactPostgreSQL.ps1"
+                      LogicalName="AOtransactPostgreSQL.Configure-AOtransactPostgreSQL.ps1" />
+  </ItemGroup>
+</Project>

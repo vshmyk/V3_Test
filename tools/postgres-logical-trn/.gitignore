@@ -1,0 +1,8 @@
+# Client-specific runtime configuration and credentials
+aotransact-postgresql.config.json
+*-credentials.txt
+*.dpapi.tmp
+
+# Runtime state and generated packages
+*.run.lock
+dist/

@@ -1,69 +1,143 @@
 param(
-    [string]$Database = "OASIS_FLUX",
-    [string]$PgHost = "localhost",
-    [int]$Port = 5432,
-    [string]$User = "postgres",
-    [string]$CredentialsPath = "C:\Users\Public\Downloads\postgresql-credentials.txt",
-    [string]$SlotName = "aotransact_flux_slot",
-    [string[]]$SchemaNames = @("dbo", "oasis"),
-    [switch]$RemoveExistingTriggers = $true
+    [string]$ConfigPath = (Join-Path $PSScriptRoot "aotransact-postgresql.config.json")
 )
 
 $ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+Add-Type -AssemblyName System.Security
 
-function Get-PostgresPassword {
+$credentialEntropy = [Text.Encoding]::UTF8.GetBytes('AOtransactPostgreSQL|Credential|v1')
+
+function Get-CredentialPassword {
     param([string]$Path)
 
-    $passwordLine = Get-Content -LiteralPath $Path | Where-Object { $_ -like 'Password=*' } | Select-Object -First 1
-    if (-not $passwordLine) {
-        throw "Password entry not found in $Path"
+    $lines = @(Get-Content -LiteralPath $Path)
+    $protectedLine = $lines | Where-Object { $_ -like 'DPAPI_LOCAL_MACHINE=*' } | Select-Object -First 1
+    if ($protectedLine) {
+        $protectedBytes = $null
+        $plainBytes = $null
+        try {
+            $protectedBytes = [Convert]::FromBase64String($protectedLine.Substring('DPAPI_LOCAL_MACHINE='.Length))
+            $plainBytes = [Security.Cryptography.ProtectedData]::Unprotect(
+                $protectedBytes,
+                $script:credentialEntropy,
+                [Security.Cryptography.DataProtectionScope]::LocalMachine)
+            return [Text.Encoding]::UTF8.GetString($plainBytes)
+        }
+        catch {
+            throw "Credential file could not be decrypted on this computer: $Path. $($_.Exception.Message)"
+        }
+        finally {
+            if ($null -ne $plainBytes) { [Array]::Clear($plainBytes, 0, $plainBytes.Length) }
+            if ($null -ne $protectedBytes) { [Array]::Clear($protectedBytes, 0, $protectedBytes.Length) }
+        }
     }
 
-    return $passwordLine.Substring("Password=".Length)
-}
-
-$env:PGPASSWORD = Get-PostgresPassword -Path $CredentialsPath
-$psql = "C:\Program Files\PostgreSQL\17\pgsql\bin\psql.exe"
-
-& $psql -h $PgHost -p $Port -U $User -d postgres -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = logical;"
-& $psql -h $PgHost -p $Port -U $User -d postgres -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET track_commit_timestamp = on;"
-Restart-Service -Name "postgresql-x64-17" -Force
-Start-Sleep -Seconds 3
-
-$schemaFilter = ($SchemaNames | ForEach-Object { "'$_'" }) -join ", "
-$tablesSql = @"
-COPY (
-    SELECT n.nspname AS table_schema, c.relname AS table_name
-    FROM pg_class c
-    JOIN pg_namespace n ON n.oid = c.relnamespace
-    WHERE c.relkind = 'r'
-      AND n.nspname IN ($schemaFilter)
-    ORDER BY n.nspname, c.relname
-) TO STDOUT WITH CSV HEADER;
-"@
-
-$tables = & $psql -h $PgHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -c $tablesSql | ConvertFrom-Csv
-
-$sqlLines = New-Object System.Collections.Generic.List[string]
-foreach ($table in $tables) {
-    $sqlLines.Add(("ALTER TABLE ""{0}"".""{1}"" REPLICA IDENTITY FULL;" -f $table.table_schema, $table.table_name))
-    if ($RemoveExistingTriggers) {
-        $sqlLines.Add(("DROP TRIGGER IF EXISTS trg_aotransact_pg_capture_dml ON ""{0}"".""{1}"";" -f $table.table_schema, $table.table_name))
+    $passwordLine = $lines | Where-Object { $_ -like 'Password=*' } | Select-Object -First 1
+    if ($passwordLine) {
+        return $passwordLine.Substring('Password='.Length)
     }
+
+    throw "Encrypted or legacy password entry not found in $Path"
 }
 
-$sqlFile = Join-Path $env:TEMP "aotransact-install-logical-trn-actions.sql"
-[System.IO.File]::WriteAllLines($sqlFile, $sqlLines)
-& $psql -h $PgHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -f $sqlFile | Out-Null
-Remove-Item -LiteralPath $sqlFile -Force
+function Resolve-PsqlExecutable {
+    param([string]$ConfiguredPath)
 
-$slotCheckSql = "SELECT 1 FROM pg_replication_slots WHERE slot_name = '$SlotName';"
-$slotExistsResult = & $psql -h $PgHost -p $Port -U $User -d $Database -t -A -v ON_ERROR_STOP=1 -c $slotCheckSql
-$slotExists = if ($null -eq $slotExistsResult) { "" } else { $slotExistsResult.Trim() }
-if (-not $slotExists) {
-    & $psql -h $PgHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -c "SELECT * FROM pg_create_logical_replication_slot('$SlotName', 'test_decoding');" | Out-Null
+    if ($ConfiguredPath -ne 'auto' -and (Test-Path -LiteralPath $ConfiguredPath)) {
+        return (Resolve-Path -LiteralPath $ConfiguredPath).Path
+    }
+    $candidates = @()
+    $root = 'C:\Program Files\PostgreSQL'
+    if (Test-Path -LiteralPath $root) {
+        foreach ($directory in Get-ChildItem -LiteralPath $root -Directory) {
+            foreach ($relativePath in @('bin\psql.exe', 'pgsql\bin\psql.exe')) {
+                $candidate = Join-Path $directory.FullName $relativePath
+                if (Test-Path -LiteralPath $candidate) { $candidates += Get-Item -LiteralPath $candidate }
+            }
+        }
+    }
+    $selected = $candidates | Sort-Object { if ($_.FullName -match '\\PostgreSQL\\(?<version>\d+)\\') { [int]$matches['version'] } else { 0 } } -Descending | Select-Object -First 1
+    if (-not $selected) { throw 'PostgreSQL psql.exe was not found.' }
+    return $selected.FullName
 }
 
-& $psql -h $PgHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -c "SELECT slot_name, plugin, slot_type, active FROM pg_replication_slots WHERE slot_name = '$SlotName';"
+function Resolve-PostgresServiceName {
+    param([string]$ConfiguredName, [string]$PsqlPath)
 
-Write-Host "Installed logical TRN capture on $Database with slot $SlotName"
+    if ($ConfiguredName -ne 'auto' -and (Get-Service -Name $ConfiguredName -ErrorAction SilentlyContinue)) {
+        return $ConfiguredName
+    }
+    if ($PsqlPath -match '\\PostgreSQL\\(?<version>\d+)\\') {
+        $versionService = "postgresql-x64-$($matches['version'])"
+        if (Get-Service -Name $versionService -ErrorAction SilentlyContinue) { return $versionService }
+    }
+    $selected = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue |
+        Sort-Object @{ Expression = { $_.Status -eq 'Running' }; Descending = $true }, Name -Descending |
+        Select-Object -First 1
+    if (-not $selected) { throw 'PostgreSQL Windows service was not found.' }
+    return $selected.Name
+}
+
+function Invoke-Psql {
+    param(
+        [string]$Psql,
+        [string]$HostName,
+        [int]$Port,
+        [string]$User,
+        [string]$Database,
+        [string]$Sql
+    )
+
+    $result = & $Psql -h $HostName -p $Port -U $User -d $Database -t -A -v ON_ERROR_STOP=1 -c $Sql
+    if ($LASTEXITCODE -ne 0) {
+        throw "psql failed with exit code $LASTEXITCODE."
+    }
+    return (($result | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join "`n").Trim()
+}
+
+$config = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
+$postgres = $config.postgres
+$capture = $config.capture
+$psql = Resolve-PsqlExecutable -ConfiguredPath ([string]$postgres.psql_path)
+$serviceName = Resolve-PostgresServiceName -ConfiguredName ([string]$postgres.service_name) -PsqlPath $psql
+$slotName = [string]$capture.slot_name
+if ($slotName -notmatch '^[a-z0-9_]+$') {
+    throw "Logical slot name must contain only lowercase letters, numbers, and underscores: '$slotName'"
+}
+
+$env:PGPASSWORD = Get-CredentialPassword -Path ([string]$postgres.credentials_path)
+$connection = @{
+    Psql = $psql
+    HostName = [string]$postgres.host
+    Port = [int]$postgres.port
+    User = [string]$postgres.user
+}
+
+$walLevel = Invoke-Psql @connection -Database "postgres" -Sql "SHOW wal_level;"
+$commitTracking = Invoke-Psql @connection -Database "postgres" -Sql "SHOW track_commit_timestamp;"
+$restartRequired = $false
+if ($walLevel -ne "logical") {
+    [void](Invoke-Psql @connection -Database "postgres" -Sql "ALTER SYSTEM SET wal_level = logical;")
+    $restartRequired = $true
+}
+if ($commitTracking -ne "on") {
+    [void](Invoke-Psql @connection -Database "postgres" -Sql "ALTER SYSTEM SET track_commit_timestamp = on;")
+    $restartRequired = $true
+}
+
+if ($restartRequired) {
+    Restart-Service -Name $serviceName -Force
+    (Get-Service -Name $serviceName).WaitForStatus('Running', [TimeSpan]::FromSeconds(60))
+}
+
+$database = [string]$postgres.database
+$existingPlugin = Invoke-Psql @connection -Database $database -Sql "SELECT plugin FROM pg_replication_slots WHERE slot_name = '$slotName';"
+if ([string]::IsNullOrWhiteSpace($existingPlugin)) {
+    [void](Invoke-Psql @connection -Database $database -Sql "SELECT slot_name FROM pg_create_logical_replication_slot('$slotName', 'test_decoding');")
+} elseif ($existingPlugin -ne "test_decoding") {
+    throw "Existing slot '$slotName' uses plugin '$existingPlugin', not test_decoding."
+}
+
+$slotState = Invoke-Psql @connection -Database $database -Sql "SELECT slot_name || '|' || plugin || '|' || active::text FROM pg_replication_slots WHERE slot_name = '$slotName';"
+Write-Host "Configured logical capture for $database without altering any tables. Slot: $slotState"

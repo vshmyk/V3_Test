@@ -1,0 +1,93 @@
+{
+  "client": {
+    "id": "CLIENT_CODE",
+    "name": "Client display name"
+  },
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "OASIS_DATABASE",
+    "user": "postgres",
+    "credentials_path": "C:\\ProgramData\\AOtransactPostgreSQL\\postgresql-credentials.txt",
+    "psql_path": "auto",
+    "service_name": "auto"
+  },
+  "capture": {
+    "slot_name": "aotransact_postgresql_slot",
+    "output_path": "C:\\ProgramData\\AOtransactPostgreSQL\\transactions.trn",
+    "archive_directory": "C:\\ProgramData\\AOtransactPostgreSQL\\archive",
+    "checkpoint_path": "C:\\ProgramData\\AOtransactPostgreSQL\\checkpoint.json",
+    "last_batch_path": "C:\\ProgramData\\AOtransactPostgreSQL\\last-batch.json",
+    "error_path": "C:\\ProgramData\\AOtransactPostgreSQL\\last-error.json",
+    "resume_from_saved_checkpoint": true,
+    "archive_batches": true,
+    "archive_empty_batches": false,
+    "archive_retention_days": 5,
+    "trim_fixed_character_trailing_spaces": true,
+    "clear_output_when_empty": true,
+    "max_changes_per_run": 10000
+  },
+  "package": {
+    "enabled": true,
+    "directory": "C:\\ProgramData\\AOtransactPostgreSQL\\outbox",
+    "sent_directory": "C:\\ProgramData\\AOtransactPostgreSQL\\sent",
+    "zip_filename_template": "{client_id}_{last_lsn}.zip",
+    "trn_entry_filename_template": "{client_id}_{last_lsn}.trn"
+  },
+  "sftp": {
+    "enabled": false,
+    "host": "sftp.example.com",
+    "port": 22,
+    "username": "SFTP_USER",
+    "credentials_path": "C:\\ProgramData\\AOtransactPostgreSQL\\sftp-credentials.txt",
+    "ssh_host_key_fingerprint": "ssh-ed25519 255 SHA256:REPLACE_WITH_SERVER_HOST_KEY",
+    "remote_directory": "/",
+    "remote_filename_template": "{client_id}_{last_lsn}.zip",
+    "upload_empty_files": false,
+    "winscp_dll_path": "WinSCPnet.dll"
+  },
+  "schedule": {
+    "enabled": true,
+    "interval_minutes": 15,
+    "task_name": "AOtransactPostgreSQL - CLIENT_CODE"
+  },
+  "tables": [
+    "oasis.CHSC_CARRIER",
+    "oasis.CHSC_CONTACTS",
+    "oasis.CHSC_CONTACT_PHONE",
+    "oasis.CHSC_DISTRIBUTORS",
+    "oasis.CHSC_DISTRIBUTORS_REPPED_BY",
+    "oasis.CHSC_DISTRIBUTOR_PHONE",
+    "oasis.CHSC_INVOICE",
+    "oasis.CHSC_INVOICELINE",
+    "oasis.CHSC_MANUFACTURERS",
+    "oasis.CHSC_MANUFACTURER_PHONE",
+    "oasis.CHSC_MANUFACTURER_REPED_AT",
+    "oasis.CHSC_PO",
+    "oasis.CHSC_POCONTACT",
+    "oasis.CHSC_POLINE",
+    "oasis.CHSC_POLINE_HISTORY",
+    "oasis.CHSC_POSPLIT",
+    "oasis.CHSC_PO_STATUS",
+    "oasis.CHSC_PO_TYPE",
+    "oasis.CHSC_PROJECT",
+    "oasis.CHSC_PROJECTBIDPACKAGE",
+    "oasis.CHSC_PROJECTRANK",
+    "oasis.CHSC_PROJECTROLERANK",
+    "oasis.CHSC_PROJECT_ALIAS",
+    "oasis.CHSC_QUOTE",
+    "oasis.CHSC_QUOTECONTACT",
+    "oasis.CHSC_QUOTEDISTRIBUTOR",
+    "oasis.CHSC_QUOTEDISTRIBUTORCONTACT",
+    "oasis.CHSC_QUOTEDISTRIBUTORSUPPLYER",
+    "oasis.CHSC_QUOTELINE",
+    "oasis.CHSC_QUOTEMANUFACTURER",
+    "oasis.CHSC_QUOTESPLIT",
+    "oasis.CHSC_QUOTE_SPECIFIER_STATUS",
+    "oasis.CHSC_QUOTE_STATUS",
+    "oasis.CHSC_SHIPMENT",
+    "oasis.CHSC_SHIPMENTLINE",
+    "oasis.CHSC_UNIT_QUANTITY",
+    "oasis.CHSC_USERS"
+  ]
+}

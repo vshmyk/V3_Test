@@ -1,11 +1,11 @@
 param(
-    [string]$Database = "OASIS_FLUX",
+    [string]$Database = "OASIS_DATABASE",
     [string]$PgHost = "localhost",
     [int]$Port = 5432,
     [string]$User = "postgres",
     [string]$CredentialsPath = "C:\Users\Public\Downloads\postgresql-credentials.txt",
-    [string]$SlotName = "aotransact_flux_slot",
-    [string]$OutputPath = "C:\ERPLINK\FLUX\flux.trn",
+    [string]$SlotName = "aotransact_postgresql_slot",
+    [string]$OutputPath = "C:\ProgramData\AOtransactPostgreSQL\transactions.trn",
     [switch]$ResetState
 )
 
@@ -378,7 +378,6 @@ $seq = 0
 foreach ($event in $batchEvents) {
     $seq++
     $lines.Add("--$($event.Operation)-$($event.TxId)-$($seq.ToString('D10'))")
-    $lines.Add("-- commit_time=$(([DateTimeOffset]::Parse($event.CommitTime)).UtcDateTime.ToString('yyyy-MM-dd HH:mm:ss.fff ''UTC''')) table=$(Convert-RelationToSqlServer -Relation $event.Relation)")
     $lines.Add((Normalize-ToSqlServerSql -Sql $event.Sql))
     $lines.Add("GO")
 }
