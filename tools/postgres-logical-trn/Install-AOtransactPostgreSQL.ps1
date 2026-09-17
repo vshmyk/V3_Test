@@ -50,13 +50,8 @@ if ([bool]$config.sftp.enabled) {
     if (-not (Test-Path -LiteralPath $config.sftp.credentials_path)) {
         throw "SFTP credentials file not found: $($config.sftp.credentials_path)"
     }
-    $winScpDll = [string]$config.sftp.winscp_dll_path
-    if (-not [System.IO.Path]::IsPathRooted($winScpDll)) {
-        $winScpDll = Join-Path $sourceDirectory $winScpDll
-    }
-    $bundledWinScpDll = Join-Path $PSScriptRoot 'WinSCPnet.dll'
-    if (-not (Test-Path -LiteralPath $winScpDll) -and -not (Test-Path -LiteralPath $bundledWinScpDll)) {
-        throw "WinSCP .NET assembly not found: $winScpDll"
+    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'AOtransactPostgreSQL.exe'))) {
+        throw 'Native SFTP requires installation from the executable package.'
     }
 }
 
@@ -69,12 +64,8 @@ $installedCredentialProtector = Join-Path $InstallDirectory "Protect-AOtransactC
 $installedConfig = Join-Path $InstallDirectory "aotransact-postgresql.config.json"
 if (Test-Path -LiteralPath $sourceExecutable) {
     Copy-Item -LiteralPath $sourceExecutable -Destination $installedExecutable -Force
-    foreach ($winScpFile in @('WinSCPnet.dll', 'WinSCP.exe')) {
-        $sourceWinScpFile = Join-Path $PSScriptRoot $winScpFile
-        if (Test-Path -LiteralPath $sourceWinScpFile) {
-            Copy-Item -LiteralPath $sourceWinScpFile -Destination (Join-Path $InstallDirectory $winScpFile) -Force
-        }
-    }
+    $notices = Join-Path $PSScriptRoot 'THIRD-PARTY-NOTICES.md'
+    if (Test-Path -LiteralPath $notices) { Copy-Item -LiteralPath $notices -Destination $InstallDirectory -Force }
 } else {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "Capture-PostgreSQLLogicalBatch.ps1") -Destination $installedScript -Force
 }

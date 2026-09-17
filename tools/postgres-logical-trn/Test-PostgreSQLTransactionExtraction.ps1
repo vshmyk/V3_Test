@@ -29,7 +29,7 @@ function Invoke-Capture {
     if ([string]::IsNullOrWhiteSpace($CaptureExecutable)) {
         & powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "Capture-PostgreSQLLogicalBatch.ps1") -ConfigPath $ConfigPath
     } else {
-        & $CaptureExecutable --config $ConfigPath
+        & $CaptureExecutable --config $ConfigPath --single-batch
     }
     if ($LASTEXITCODE -ne 0) {
         throw "Logical capture failed with exit code $LASTEXITCODE."

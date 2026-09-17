@@ -6,15 +6,20 @@
     <Nullable>enable</Nullable>
     <AssemblyName>AOtransactPostgreSQL</AssemblyName>
     <RootNamespace>AOtransactPostgreSQL</RootNamespace>
-    <Version>1.8.1</Version>
+    <Version>2.0.0</Version>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <DebugType>none</DebugType>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="SSH.NET" Version="2026.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.md"
+                      LogicalName="AOtransactPostgreSQL.ThirdPartyNotices" />
     <EmbeddedResource Include="..\Capture-PostgreSQLLogicalBatch.ps1"
                       Link="Scripts\Capture-PostgreSQLLogicalBatch.ps1"
                       LogicalName="AOtransactPostgreSQL.Capture-PostgreSQLLogicalBatch.ps1" />

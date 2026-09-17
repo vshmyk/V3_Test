@@ -1,5 +1,6 @@
 param(
-    [string]$ConfigPath = (Join-Path $PSScriptRoot "aotransact-postgresql.config.json")
+    [string]$ConfigPath = (Join-Path $PSScriptRoot "aotransact-postgresql.config.json"),
+    [string]$SftpExecutable = ''
 )
 
 $ErrorActionPreference = "Stop"
@@ -641,54 +642,23 @@ function Send-SftpFile {
         [string]$RemoteFileName
     )
 
-    $required = @('host', 'port', 'username', 'credentials_path', 'ssh_host_key_fingerprint', 'remote_directory', 'winscp_dll_path')
-    foreach ($name in $required) {
-        $property = $Settings.PSObject.Properties[$name]
-        if ($null -eq $property -or [string]::IsNullOrWhiteSpace([string]$property.Value)) {
-            throw "SFTP config value '$name' is required when SFTP is enabled."
-        }
+    if ([string]::IsNullOrWhiteSpace($script:SftpExecutable) -or -not (Test-Path -LiteralPath $script:SftpExecutable)) {
+        throw 'Native SFTP requires AOtransactPostgreSQL.exe. Run the EXE or supply -SftpExecutable when invoking the batch script.'
     }
-
-    if (-not (Test-Path -LiteralPath $Settings.winscp_dll_path)) {
-        throw "WinSCP .NET assembly not found: $($Settings.winscp_dll_path)"
-    }
-
-    $password = Get-PostgresPassword -Path ([string]$Settings.credentials_path)
-    Add-Type -Path ([string]$Settings.winscp_dll_path)
-    $sessionOptions = [WinSCP.SessionOptions]@{
-        Protocol = [WinSCP.Protocol]::Sftp
-        HostName = [string]$Settings.host
-        PortNumber = [int]$Settings.port
-        UserName = [string]$Settings.username
-        Password = $password
-        SshHostKeyFingerprint = ([string]$Settings.ssh_host_key_fingerprint) -replace '(?i)SHA256:', ''
-    }
-
-    $remoteDirectory = ([string]$Settings.remote_directory).TrimEnd('/')
-    $remotePath = if ([string]::IsNullOrWhiteSpace($remoteDirectory)) {
-        "/$RemoteFileName"
-    } else {
-        "$remoteDirectory/$RemoteFileName"
-    }
-    $temporaryPath = "$remotePath.uploading"
-
-    $session = [WinSCP.Session]::new()
+    $resultPath = Join-Path $env:TEMP ("aotransact-sftp-" + [guid]::NewGuid().ToString('N') + '.json')
     try {
-        $session.Open($sessionOptions)
-        $transfer = $session.PutFiles($LocalPath, $temporaryPath, $false)
-        $transfer.Check()
-        if ($session.FileExists($remotePath)) {
-            $session.RemoveFile($remotePath)
+        & $script:SftpExecutable --sftp-upload --config $script:resolvedConfigPath --local-file $LocalPath --remote-name $RemoteFileName --result-file $resultPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Native SFTP upload failed for '$RemoteFileName' with exit code $LASTEXITCODE. The ZIP remains pending and the logical slot is not advanced."
         }
-        $session.MoveFile($temporaryPath, $remotePath)
-        $remoteInfo = $session.GetFileInfo($remotePath)
-        return [pscustomobject]@{
-            RemotePath = $remotePath
-            Size = $remoteInfo.Length
+        $receipt = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+        if ([long]$receipt.Size -ne (Get-Item -LiteralPath $LocalPath).Length) {
+            throw 'Native SFTP receipt size does not match the pending ZIP.'
         }
+        return $receipt
     }
     finally {
-        $session.Dispose()
+        if (Test-Path -LiteralPath $resultPath) { Remove-Item -LiteralPath $resultPath -Force }
     }
 }
 
@@ -748,7 +718,11 @@ if (-not (Test-Path -LiteralPath $ConfigPath)) {
 }
 
 $config = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json
-$configDirectory = Split-Path -Parent (Resolve-Path -LiteralPath $ConfigPath).Path
+$resolvedConfigPath = (Resolve-Path -LiteralPath $ConfigPath).Path
+$configDirectory = Split-Path -Parent $resolvedConfigPath
+if ([string]::IsNullOrWhiteSpace($SftpExecutable)) {
+    $SftpExecutable = Join-Path $configDirectory 'AOtransactPostgreSQL.exe'
+}
 $client = $config.client
 $postgres = $config.postgres
 $capture = $config.capture
@@ -802,14 +776,6 @@ if ($maxChangesPerRun -lt 1) {
 }
 $sftpEnabled = [bool]$sftp.enabled
 $sftpUploadEmptyFiles = [bool]$sftp.upload_empty_files
-$sftpCredentialsPath = [string]$sftp.credentials_path
-$sftpWinScpPath = [string]$sftp.winscp_dll_path
-if (-not [System.IO.Path]::IsPathRooted($sftpCredentialsPath)) {
-    $sftp.credentials_path = Join-Path $configDirectory $sftpCredentialsPath
-}
-if (-not [System.IO.Path]::IsPathRooted($sftpWinScpPath)) {
-    $sftp.winscp_dll_path = Join-Path $configDirectory $sftpWinScpPath
-}
 $packageEnabled = [bool]$package.enabled
 $packageDirectory = [string]$package.directory
 $sentDirectory = if ($null -ne $package.PSObject.Properties['sent_directory'] -and
@@ -863,6 +829,8 @@ COPY (
     $lastSeenLsn = ""
     $rawRowCount = 0
     $matchedRowCount = 0
+    $firstDecodedCommitUtc = $null
+    $lastDecodedCommitUtc = $null
 
     foreach ($row in $rows) {
         $rawRowCount++
@@ -883,8 +851,10 @@ COPY (
 
         if ($data -match '^COMMIT\s+(?<xid>\d+)\s+\(at\s+(?<ts>[^)]+)\)$') {
             $xid = $matches['xid']
+            $commitTime = [DateTimeOffset]::Parse($matches['ts'], [System.Globalization.CultureInfo]::InvariantCulture)
+            $lastDecodedCommitUtc = $commitTime.UtcDateTime.ToString("o")
+            if ($null -eq $firstDecodedCommitUtc) { $firstDecodedCommitUtc = $lastDecodedCommitUtc }
             if ($pending.ContainsKey($xid)) {
-                $commitTime = [DateTimeOffset]::Parse($matches['ts'], [System.Globalization.CultureInfo]::InvariantCulture)
                 foreach ($change in $pending[$xid]) {
                     $normalizedTable = "$($change.SchemaName).$($change.TableName)"
                     if (-not $trackedLookup.Contains($normalizedTable)) {
@@ -1043,6 +1013,8 @@ COPY (
         raw_decoder_rows = $rawRowCount
         max_changes_per_run = $maxChangesPerRun
         batch_limit_reached = $rawRowCount -ge $maxChangesPerRun
+        first_decoded_commit_utc = $firstDecodedCommitUtc
+        last_decoded_commit_utc = $lastDecodedCommitUtc
         tracked_statement_count = $orderedEvents.Count
         tracked_change_rows = $matchedRowCount
         decoded_table_change_counts = $decodedTableCounts
@@ -1055,10 +1027,12 @@ COPY (
         batch_lsn = $batchLsn
         zip_path = $zipPath
         sftp_enabled = $sftpEnabled
+        sftp_transport = 'native_dotnet'
         sftp_uploaded = $sftpResults.Count -gt 0
         sftp_uploaded_count = $sftpResults.Count
         sftp_remote_path = if ($null -ne $sftpResult) { $sftpResult.RemotePath } elseif ($sftpResults.Count -gt 0) { $sftpResults[-1].RemotePath } else { "" }
         sftp_uploaded_bytes = if ($sftpResults.Count -gt 0) { [long]($sftpResults | Measure-Object -Property Size -Sum).Sum } else { 0 }
+        sftp_current_package_sha256 = if ($null -ne $sftpResult) { [string]$sftpResult.Sha256 } else { '' }
         tables = $trackedTables
         table_statement_counts = $tableCounts
     }

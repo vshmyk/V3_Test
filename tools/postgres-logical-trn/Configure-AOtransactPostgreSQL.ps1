@@ -183,24 +183,15 @@ function Test-PostgresConnection {
 }
 
 function Test-SftpConnection {
-    param([pscustomobject]$Config, [string]$Password)
-    $dll = Join-Path $PackageDirectory 'WinSCPnet.dll'
-    Add-Type -Path $dll
-    $options = [WinSCP.SessionOptions]@{
-        Protocol = [WinSCP.Protocol]::Sftp
-        HostName = [string]$Config.sftp.host
-        PortNumber = [int]$Config.sftp.port
-        UserName = [string]$Config.sftp.username
-        Password = $Password
-        SshHostKeyFingerprint = ([string]$Config.sftp.ssh_host_key_fingerprint) -replace '(?i)SHA256:', ''
-    }
-    $session = [WinSCP.Session]::new()
+    param([pscustomobject]$Config)
+    $executable = Join-Path $PackageDirectory 'AOtransactPostgreSQL.exe'
+    $validationPath = Join-Path $env:TEMP ('aotransact-validation-' + [guid]::NewGuid().ToString('N') + '.json')
     try {
-        $session.ExecutablePath = Join-Path $PackageDirectory 'WinSCP.exe'
-        $session.Open($options)
-    }
-    finally {
-        $session.Dispose()
+        [IO.File]::WriteAllText($validationPath, ($Config | ConvertTo-Json -Depth 8), [Text.UTF8Encoding]::new($false))
+        & $executable --test-sftp --config $validationPath
+        if ($LASTEXITCODE -ne 0) { throw 'Native SFTP authentication, host-key, or remote-directory validation failed.' }
+    } finally {
+        if (Test-Path -LiteralPath $validationPath) { Remove-Item -LiteralPath $validationPath -Force }
     }
 }
 
@@ -295,6 +286,8 @@ $sftpPassword = New-TextBox -Password
 $sftpDirectory = New-TextBox ([string]$defaults.sftp.remote_directory)
 $sftpFingerprint = New-TextBox ([string]$defaults.sftp.ssh_host_key_fingerprint)
 $remoteTemplate = New-TextBox ([string]$defaults.sftp.remote_filename_template)
+$sftpTimeout = New-TextBox ([string]$(if ($null -ne $defaults.sftp.PSObject.Properties['timeout_seconds']) { $defaults.sftp.timeout_seconds } else { 60 }))
+$sftpRetries = New-TextBox ([string]$(if ($null -ne $defaults.sftp.PSObject.Properties['retry_count']) { $defaults.sftp.retry_count } else { 2 }))
 Add-Field $sftpPage 'Enable SFTP' $sftpEnabled
 Add-Field $sftpPage 'SFTP host' $sftpHost
 Add-Field $sftpPage 'SFTP port' $sftpPort
@@ -303,6 +296,8 @@ Add-Field $sftpPage 'SFTP password' $sftpPassword
 Add-Field $sftpPage 'Remote directory' $sftpDirectory
 Add-Field $sftpPage 'SSH host fingerprint' $sftpFingerprint
 Add-Field $sftpPage 'Remote ZIP template' $remoteTemplate
+Add-Field $sftpPage 'Timeout in seconds' $sftpTimeout
+Add-Field $sftpPage 'Additional retries (0-10)' $sftpRetries
 
 $schedulePage = New-Page -Tabs $tabs -Title '4. Schedule and Tables'
 $scheduleEnabled = [Windows.Forms.CheckBox]::new()
@@ -311,6 +306,8 @@ $scheduleEnabled.Checked = [bool]$defaults.schedule.enabled
 $scheduleEnabled.Dock = 'Fill'
 $scheduleInterval = New-TextBox ([string]$defaults.schedule.interval_minutes)
 $maxChangesPerRun = New-TextBox ([string]$(if ($null -ne $defaults.capture.PSObject.Properties['max_changes_per_run']) { $defaults.capture.max_changes_per_run } else { 10000 }))
+$maxBatchesPerRun = New-TextBox ([string]$(if ($null -ne $defaults.capture.PSObject.Properties['max_batches_per_run']) { $defaults.capture.max_batches_per_run } else { 20 }))
+$maxRunSeconds = New-TextBox ([string]$(if ($null -ne $defaults.capture.PSObject.Properties['max_run_seconds']) { $defaults.capture.max_run_seconds } else { 600 }))
 $taskName = New-TextBox ([string]$defaults.schedule.task_name)
 $configurePostgres = [Windows.Forms.CheckBox]::new()
 $configurePostgres.Text = 'Configure logical decoding now (may restart PostgreSQL)'
@@ -323,7 +320,9 @@ $runInitial.Dock = 'Fill'
 $tables = New-TextBox -Text ((@($defaults.tables)) -join "`r`n") -Multiline
 Add-Field $schedulePage 'Enable schedule' $scheduleEnabled
 Add-Field $schedulePage 'Interval in minutes' $scheduleInterval
-Add-Field $schedulePage 'Maximum WAL rows per run' $maxChangesPerRun
+Add-Field $schedulePage 'Maximum WAL rows per batch' $maxChangesPerRun
+Add-Field $schedulePage 'Maximum batches per run' $maxBatchesPerRun
+Add-Field $schedulePage 'Run budget in seconds (soft)' $maxRunSeconds
 Add-Field $schedulePage 'Scheduled task name' $taskName
 Add-Field $schedulePage 'PostgreSQL setup' $configurePostgres
 Add-Field $schedulePage 'Initial validation run' $runInitial
@@ -370,6 +369,10 @@ $installButton.Add_Click({
         $sftpPortValue = 0
         $intervalValue = 0
         $maxChangesValue = 0
+        $maxBatchesValue = 0
+        $maxRunSecondsValue = 0
+        $sftpTimeoutValue = 0
+        $sftpRetriesValue = 0
         $archiveRetentionValue = 0
         if (-not [int]::TryParse($pgPort.Text, [ref]$pgPortValue) -or $pgPortValue -notin 1..65535) {
             throw 'PostgreSQL port must be between 1 and 65535.'
@@ -377,11 +380,23 @@ $installButton.Add_Click({
         if (-not [int]::TryParse($sftpPort.Text, [ref]$sftpPortValue) -or $sftpPortValue -notin 1..65535) {
             throw 'SFTP port must be between 1 and 65535.'
         }
+        if (-not [int]::TryParse($sftpTimeout.Text, [ref]$sftpTimeoutValue) -or $sftpTimeoutValue -lt 1) {
+            throw 'SFTP timeout must be at least one second.'
+        }
+        if (-not [int]::TryParse($sftpRetries.Text, [ref]$sftpRetriesValue) -or $sftpRetriesValue -notin 0..10) {
+            throw 'SFTP additional retries must be between 0 and 10.'
+        }
         if (-not [int]::TryParse($scheduleInterval.Text, [ref]$intervalValue) -or $intervalValue -lt 1) {
             throw 'Schedule interval must be at least one minute.'
         }
         if (-not [int]::TryParse($maxChangesPerRun.Text, [ref]$maxChangesValue) -or $maxChangesValue -lt 1) {
-            throw 'Maximum WAL rows per run must be at least 1.'
+            throw 'Maximum WAL rows per batch must be at least 1.'
+        }
+        if (-not [int]::TryParse($maxBatchesPerRun.Text, [ref]$maxBatchesValue) -or $maxBatchesValue -lt 1) {
+            throw 'Maximum batches per run must be at least 1.'
+        }
+        if (-not [int]::TryParse($maxRunSeconds.Text, [ref]$maxRunSecondsValue) -or $maxRunSecondsValue -lt 1) {
+            throw 'Run budget seconds must be at least 1.'
         }
         if (-not [int]::TryParse($archiveRetentionDays.Text, [ref]$archiveRetentionValue) -or $archiveRetentionValue -lt 1) {
             throw 'Archive retention days must be at least 1.'
@@ -422,6 +437,8 @@ $installButton.Add_Click({
                 archive_retention_days = $archiveRetentionValue
                 trim_fixed_character_trailing_spaces = $trimFixedCharacterSpaces.Checked
                 max_changes_per_run = $maxChangesValue
+                max_batches_per_run = $maxBatchesValue
+                max_run_seconds = $maxRunSecondsValue
             }
             package = [ordered]@{
                 enabled = $true; directory = (Join-Path $dataPath 'outbox')
@@ -433,7 +450,7 @@ $installButton.Add_Click({
                 username = $sftpUser.Text.Trim(); credentials_path = $sftpCredentialPath
                 ssh_host_key_fingerprint = $sftpFingerprint.Text.Trim(); remote_directory = $sftpDirectory.Text.Trim()
                 remote_filename_template = $remoteTemplate.Text.Trim(); upload_empty_files = $false
-                winscp_dll_path = (Join-Path $installPath 'WinSCPnet.dll')
+                timeout_seconds = $sftpTimeoutValue; retry_count = $sftpRetriesValue
             }
             schedule = [ordered]@{
                 enabled = $scheduleEnabled.Checked; interval_minutes = $intervalValue; task_name = $taskName.Text.Trim()
@@ -454,8 +471,7 @@ $installButton.Add_Click({
         if ($sftpEnabled.Checked) {
             $status.Text = 'Validating SFTP authentication and host key...'
             [Windows.Forms.Application]::DoEvents()
-            $sftpValidationPassword = if ($sftpPassword.Text) { $sftpPassword.Text } else { Get-CredentialPassword -Path $sftpCredentialPath }
-            Test-SftpConnection -Config $configObject -Password $sftpValidationPassword
+            Test-SftpConnection -Config $configObject
         }
 
         $configDirectory = Split-Path -Parent $ConfigPath

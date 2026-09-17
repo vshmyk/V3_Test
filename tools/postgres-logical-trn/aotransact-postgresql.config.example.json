@@ -25,7 +25,9 @@
     "archive_retention_days": 5,
     "trim_fixed_character_trailing_spaces": true,
     "clear_output_when_empty": true,
-    "max_changes_per_run": 10000
+    "max_changes_per_run": 10000,
+    "max_batches_per_run": 20,
+    "max_run_seconds": 600
   },
   "package": {
     "enabled": true,
@@ -44,7 +46,8 @@
     "remote_directory": "/",
     "remote_filename_template": "{client_id}_{last_lsn}.zip",
     "upload_empty_files": false,
-    "winscp_dll_path": "WinSCPnet.dll"
+    "timeout_seconds": 60,
+    "retry_count": 2
   },
   "schedule": {
     "enabled": true,

@@ -17,6 +17,8 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot "aotransact-postgresql.config.ex
     -Destination (Join-Path $OutputDirectory "aotransact-postgresql.config.json") -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "README.md") `
     -Destination (Join-Path $OutputDirectory "README.md") -Force
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot "THIRD-PARTY-NOTICES.md") `
+    -Destination (Join-Path $OutputDirectory "THIRD-PARTY-NOTICES.md") -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "Install-AOtransactPostgreSQL.ps1") `
     -Destination (Join-Path $OutputDirectory "Install-AOtransactPostgreSQL.ps1") -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "Install-PostgresLogicalTrn.ps1") `
@@ -25,13 +27,13 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot "Configure-AOtransactPostgreSQL.
     -Destination (Join-Path $OutputDirectory "Configure-AOtransactPostgreSQL.ps1") -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "Protect-AOtransactCredentials.ps1") `
     -Destination (Join-Path $OutputDirectory "Protect-AOtransactCredentials.ps1") -Force
-$winScpDirectory = "C:\Program Files (x86)\WinSCP"
-foreach ($winScpFile in @('WinSCPnet.dll', 'WinSCP.exe')) {
-    $sourceWinScpFile = Join-Path $winScpDirectory $winScpFile
-    if (-not (Test-Path -LiteralPath $sourceWinScpFile)) {
-        throw "Required SFTP runtime file not found: $sourceWinScpFile"
+# Remove only obsolete dependencies from this explicitly selected build output.
+$resolvedOutput = (Resolve-Path -LiteralPath $OutputDirectory).Path
+foreach ($obsoleteName in @('WinSCPnet.dll', 'WinSCP.exe')) {
+    $obsoletePath = Join-Path $resolvedOutput $obsoleteName
+    if (Test-Path -LiteralPath $obsoletePath) {
+        Remove-Item -LiteralPath $obsoletePath -Force
     }
-    Copy-Item -LiteralPath $sourceWinScpFile -Destination (Join-Path $OutputDirectory $winScpFile) -Force
 }
 
 $exe = Get-Item -LiteralPath (Join-Path $OutputDirectory "AOtransactPostgreSQL.exe")
